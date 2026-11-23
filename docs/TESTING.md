@@ -35,16 +35,16 @@ python -m pytest tests/property -v --hypothesis-show-statistics
 
 ## What has been verified where
 
-Verified means executed on 2026-11-23 in this project's development environment (Ubuntu 24.04
-x86_64 container), not in CI.
+Verified means executed on 2026-11-23, locally (Ubuntu 24.04 x86_64 container) and in this
+repository's GitHub Actions.
 
 | Environment | Status |
 |---|---|
 | Linux, Python 3.11.18 / 3.12.3 / 3.13.18: full pytest, mypy, `--expect-fail` run | verified |
 | awk: mawk 1.3.4, gawk 5.2.1, BusyBox 1.36.1 awk, one-true-awk 20231127 | verified, identical output |
 | Shell test: dash 0.5.12, bash 5.2, BusyBox 1.36.1 sh × the four awks, dev and PR #4 | verified: 24 distinct combinations (3 shells × 4 awks × 2 revisions) |
-| macOS (BSD userland, Apple's awk) | **not verified**. CI has a `macos-latest` job |
-| GitHub Actions workflow | **not verified**. actionlint 1.7.12 is clean, but the workflow has never run on GitHub |
+| macOS (GitHub `macos-latest`, image macos-26-arm64, Apple awk 20200816), Python 3.12 | verified in CI: 77 passed, 4 skipped (gawk-only and multi-awk tests), same expected failures |
+| GitHub Actions workflow | verified: Linux 3.11/3.12/3.13 (115 passed each), macOS, wheel job, report artifacts |
 | Windows | not supported (needs a POSIX awk); WSL untested |
 
 ## Hardware validation matrix (specified, NOT RUN)

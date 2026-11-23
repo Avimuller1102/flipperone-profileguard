@@ -15,6 +15,6 @@
   ARCHITECTURE.md, "Trust boundaries".
 - **Snapshot age.** The bundled script is `dev@bb92d87` (2026-11-10). Use `--repo` for anything
   newer. The scheduled CI job compares today's `dev` with the snapshot.
-- **Platforms.** Linux is verified. macOS is expected to work but is not verified. Windows works
-  only through WSL, which is untested.
+- **Platforms.** Linux and macOS are verified in CI; macOS has only its system awk, so the
+  cross-awk comparison runs on Linux. Windows works only through WSL, which is untested.
 - Passing every scenario does not make a revision secure; it only means these scenarios hold.

@@ -57,9 +57,9 @@ No new upstream defect is confirmed.
 
 ## Install
 
-Python 3.11+ and at least one awk. Verified on Linux with Python 3.11, 3.12 and 3.13. macOS is
-expected to work but has not been verified (see [docs/TESTING.md](docs/TESTING.md)). On Windows,
-use WSL.
+Python 3.11+ and at least one awk. Verified in GitHub Actions on Ubuntu 24.04 with Python 3.11,
+3.12 and 3.13, and on macOS with Python 3.12 and the system awk (see
+[docs/TESTING.md](docs/TESTING.md)). On Windows, use WSL (untested).
 
 ```bash
 git clone https://github.com/avimuller1102/flipperone-profileguard
