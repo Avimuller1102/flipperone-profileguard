@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from profileguard import targets
-from tests.conftest import PR4_FIXTURE
+from tests.conftest import OLD_DEV_FIXTURE, PR4_FIXTURE
 
 SH_TEST = Path(__file__).parents[2] / "upstream-proposal" / "tests" / "accountdb-merge.sh"
 SHELLS = [s for s in ("sh", "dash", "bash", "busybox") if shutil.which(s)]
@@ -46,9 +46,13 @@ def _run(test: Path, shell: str, awk: str) -> subprocess.CompletedProcess[str]:
 
 @pytest.mark.parametrize("awk", AWKS)
 @pytest.mark.parametrize("shell", SHELLS)
-@pytest.mark.parametrize("which", ["snapshot", "pr4"])
+@pytest.mark.parametrize("which", ["snapshot", "old_dev", "pr4"])
 def test_upstream_revisions_pass(which: str, shell: str, awk: str, tmp_path: Path) -> None:
-    script = targets.snapshot().script if which == "snapshot" else PR4_FIXTURE
+    script = {
+        "snapshot": targets.snapshot().script,
+        "old_dev": OLD_DEV_FIXTURE,
+        "pr4": PR4_FIXTURE,
+    }[which]
     proc = _run(_tree(script, tmp_path), shell, _awk_path(awk, tmp_path))
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert proc.stdout.count("\nok ") + proc.stdout.startswith("ok ") == 12

@@ -1,7 +1,8 @@
-"""Run every scenario through the real upstream script and pin what it does today.
+"""Run every scenario through real upstream scripts and pin what each one does.
 
-These are not wishes: they record the behaviour of the bundled dev snapshot and of PR #4, so a
-change upstream shows up here as a failing expectation that has to be looked at and updated.
+These are not wishes: they record the behaviour of the bundled snapshot (dev@8c9ffc7) and of two
+earlier revisions kept as fixtures, so a change upstream shows up here as a failing expectation
+that has to be looked at and updated.
 """
 
 from __future__ import annotations
@@ -13,8 +14,11 @@ from profileguard.runner import Status, run_all
 from profileguard.scenarios import SCENARIOS
 from profileguard.targets import Target
 
-DEV_FAILS = {"AM-10", "AM-11", "AM-13"}
-PR4_FAILS = {"AM-11", "AM-12", "AM-13"}
+EXPECTED_FAILURES = {
+    "snapshot": set(),  # dev@8c9ffc7: AM-10 fixed by #4, AM-11 and AM-13 by 8c9ffc7
+    "old_dev": {"AM-10", "AM-11", "AM-13"},  # dev@bb92d87, before both
+    "pr4": {"AM-11", "AM-12", "AM-13"},  # #4 alone
+}
 
 
 def _failing(target: Target, awks: list[AwkImpl]) -> dict[str, set[str]]:
@@ -26,26 +30,22 @@ def _failing(target: Target, awks: list[AwkImpl]) -> dict[str, set[str]]:
     return out
 
 
-def test_dev_snapshot(snapshot: Target, all_awks: list[AwkImpl]) -> None:
-    failing = _failing(snapshot, all_awks)
+@pytest.mark.parametrize("which", sorted(EXPECTED_FAILURES))
+def test_pinned_behaviour(
+    which: str, request: pytest.FixtureRequest, all_awks: list[AwkImpl]
+) -> None:
+    failing = _failing(request.getfixturevalue(which), all_awks)
     for a in all_awks:
-        assert failing.get(a.name, set()) == DEV_FAILS, a.name
+        assert failing.get(a.name, set()) == EXPECTED_FAILURES[which], a.name
 
 
-def test_pr4(pr4: Target, all_awks: list[AwkImpl]) -> None:
-    failing = _failing(pr4, all_awks)
-    for a in all_awks:
-        assert failing.get(a.name, set()) == PR4_FAILS, a.name
-
-
-@pytest.mark.parametrize("which", ["snapshot", "pr4"])
+@pytest.mark.parametrize("which", sorted(EXPECTED_FAILURES))
 def test_every_awk_produces_identical_output(
-    which: str, snapshot: Target, pr4: Target, all_awks: list[AwkImpl]
+    which: str, request: pytest.FixtureRequest, all_awks: list[AwkImpl]
 ) -> None:
     if len(all_awks) < 2:
         pytest.skip("only one awk implementation installed")
-    target = snapshot if which == "snapshot" else pr4
     by_scenario: dict[str, set[tuple[str, ...]]] = {}
-    for r in run_all(list(SCENARIOS), target, all_awks):
+    for r in run_all(list(SCENARIOS), request.getfixturevalue(which), all_awks):
         by_scenario.setdefault(r.scenario.id, set()).add(r.merged)
     assert {k: len(v) for k, v in by_scenario.items() if len(v) > 1} == {}

@@ -25,8 +25,8 @@ def report(snapshot: Target, awk: AwkImpl) -> dict[str, Any]:
 def test_report_is_valid(report: dict[str, Any]) -> None:
     assert reporting.validate(report) == []
     assert report["target"]["trust"] == "bundled"
-    assert report["summary"]["contract_violations"] == 1
-    assert report["summary"]["findings"] == 2
+    assert report["summary"]["contract_violations"] == 0
+    assert report["summary"]["findings"] == 0
 
 
 @pytest.mark.parametrize(

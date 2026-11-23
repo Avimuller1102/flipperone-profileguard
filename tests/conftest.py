@@ -10,6 +10,8 @@ from profileguard.merger import AwkImpl, available_awks, find_awk
 FIXTURES = Path(__file__).parent / "fixtures"
 PR4_FIXTURE = FIXTURES / "flipper-accountdb.pr4-c8a97b0.awk"
 PR4_BLOB = "666053f332e5a9dc9e8d32023f539bce71f32652"
+OLD_DEV_FIXTURE = FIXTURES / "flipper-accountdb.bb92d87.awk"
+OLD_DEV_BLOB = "0533182f2d87de6d350dd45f22573122ace6e087"
 
 
 def primary_awk() -> AwkImpl:
@@ -42,3 +44,9 @@ def snapshot() -> targets.Target:
 def pr4() -> targets.Target:
     # Read before it was added (tests/fixtures/README.md); unreviewed in the trust model.
     return targets.from_file(PR4_FIXTURE, allow_unreviewed=True)
+
+
+@pytest.fixture(scope="session")
+def old_dev() -> targets.Target:
+    # dev before 8c9ffc7; kept to show what the scenarios caught (tests/fixtures/README.md).
+    return targets.from_file(OLD_DEV_FIXTURE, allow_unreviewed=True)

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flipperone-profileguard"
-version = "0.1.0"
+version = "0.1.1"
 description = "Security scenarios for the account-database merge used by Flipper OS profile migration"
 readme = "README.md"
 license = "MIT"

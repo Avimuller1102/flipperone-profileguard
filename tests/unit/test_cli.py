@@ -31,14 +31,13 @@ def test_doctor_require_reports_missing_dependency() -> None:
 
 def test_expect_fail_must_match_exactly(capsys: pytest.CaptureFixture[str]) -> None:
     awk = primary_awk().name
-    base = ["test", "--awk", awk]
-    known = ["--expect-fail", "AM-10", "--expect-fail", "AM-11", "--expect-fail", "AM-13"]
-    assert main([*base, *known]) == 0
-    assert main([*base, "--expect-fail", "AM-10", "--expect-fail", "AM-11"]) == 1
-    assert "AM-13 failed but was not expected to" in capsys.readouterr().out
-    assert main([*base, "--expect-fail", "AM-10,AM-11,AM-13"]) == 0
-    assert main([*base, *known, "--expect-fail", "AM-01"]) == 1
-    assert "AM-01 was expected to fail but passed" in capsys.readouterr().out
+    base = ["test", "--target", "synthetic-defect", "--awk", awk]
+    assert main(["test", "--awk", awk]) == 0  # the snapshot fails nothing
+    assert main([*base, "--expect-fail", "AM-01,AM-02,AM-04,AM-12"]) == 0
+    assert main([*base, "--expect-fail", "AM-01", "--expect-fail", "AM-02,AM-04"]) == 1
+    assert "AM-12 failed but was not expected to" in capsys.readouterr().out
+    assert main([*base, "--expect-fail", "AM-01,AM-02,AM-04,AM-12,AM-05"]) == 1
+    assert "AM-05 was expected to fail but passed" in capsys.readouterr().out
 
 
 def test_local_script_is_refused_without_opt_in(tmp_path: Path) -> None:
@@ -68,7 +67,7 @@ def test_execution_error_has_its_own_exit_code(tmp_path: Path) -> None:
 
 def test_report_validates_and_renders(tmp_path: Path) -> None:
     out = tmp_path / "r.json"
-    assert main(["test", "--awk", primary_awk().name, "--json", str(out)]) == 1
+    assert main(["test", "--awk", primary_awk().name, "--json", str(out)]) == 0
     assert main(["report", str(out)]) == 0
     assert main(["report", str(out), "--html", str(tmp_path / "r.html")]) == 0
     assert (tmp_path / "r.html").stat().st_size > 1000

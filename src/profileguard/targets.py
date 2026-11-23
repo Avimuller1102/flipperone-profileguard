@@ -36,9 +36,9 @@ from profileguard.scenarios import ACCOUNTDB
 #: Provenance of the bundled snapshot. Checked before each run and by `profileguard doctor`.
 SNAPSHOT_REPO = "https://github.com/flipperdevices/flipperos-btrfs-tools"
 SNAPSHOT_BRANCH = "dev"
-SNAPSHOT_COMMIT = "bb92d87252807ee306c90e9c853b8a9af84a493f"
-SNAPSHOT_BLOB = "0533182f2d87de6d350dd45f22573122ace6e087"
-SYNTHETIC_BLOB = "83938f2c017999ef345e430e1b6c0145d5b649d6"
+SNAPSHOT_COMMIT = "8c9ffc779501da67009b77ccc0bca338549a2929"
+SNAPSHOT_BLOB = "fae7452c04333de1fabcca98b7e9e20504666913"
+SYNTHETIC_BLOB = "8fc5717cd06f4eddd32f5afba0c7015e60c29675"
 
 _OFFICIAL_REMOTE = re.compile(
     r"^(?:https://github\.com/|ssh://git@github\.com/|git@github\.com:)"
@@ -209,6 +209,8 @@ def from_git(repo: Path, ref: str, workdir: Path, allow_unreviewed: bool) -> Tar
 
 
 def from_file(path: Path, allow_unreviewed: bool) -> Target:
+    # Absolute: awk runs from a private temporary directory, where a relative path means nothing.
+    path = path.resolve()
     if not path.is_file():
         raise TargetError(f"no such file: {path}")
     if not allow_unreviewed:

@@ -10,13 +10,6 @@ on:
 permissions:
   contents: read
 
-env:
-  # Scenarios that fail on the bundled dev@bb92d87 snapshot today, and why:
-  # AM-10 contract violation already fixed by flipperos-btrfs-tools PR #4 (unmerged);
-  # AM-11, AM-13 findings against proposed invariants (questions for maintainers).
-  # `profileguard test --expect-fail` exits 0 only if exactly these fail on every awk.
-  KNOWN_FAILURES: AM-10,AM-11,AM-13
-
 jobs:
   test:
     if: github.event_name != 'schedule'
@@ -55,9 +48,10 @@ jobs:
       - run: mypy
       - run: python -m pytest -v --junitxml=pytest-results.xml
 
-      - name: Upstream snapshot fails exactly the known scenarios
-        # 0 = as expected; 1 = a scenario failed or passed unexpectedly; 3 = awk execution error
-        run: profileguard test --all-awks --expect-fail "$KNOWN_FAILURES" --json report.json --html report.html
+      - name: Upstream snapshot passes every scenario
+        # The bundled snapshot is dev@8c9ffc7, which fails nothing. --strict: any failure exits 1;
+        # 3 = awk execution error. Older revisions' known failures are pinned in pytest.
+        run: profileguard test --all-awks --strict --json report.json --html report.html
 
       - name: Report is complete and valid
         run: |
@@ -104,7 +98,7 @@ jobs:
           /tmp/clean/bin/pip install dist/*.whl
           cd /tmp
           /tmp/clean/bin/profileguard doctor
-          /tmp/clean/bin/profileguard test --expect-fail "$KNOWN_FAILURES" --json /tmp/r.json
+          /tmp/clean/bin/profileguard test --strict --json /tmp/r.json
           /tmp/clean/bin/profileguard report /tmp/r.json
 
   upstream-drift:

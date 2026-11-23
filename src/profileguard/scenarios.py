@@ -68,7 +68,7 @@ USER_LOCKED = shadow("user", "!" + FACTORY_B1, 20310)
 PASSWD_ROOT = "root:x:0:0:root:/root:/bin/bash"
 PASSWD_USER = "user:x:1000:1000::/home/user:/bin/bash"
 
-HEADER = f"{ACCOUNTDB}:3-5"
+HEADER = f"{ACCOUNTDB}:3-6"
 
 SCENARIOS: tuple[Scenario, ...] = (
     Scenario(
@@ -207,7 +207,8 @@ SCENARIOS: tuple[Scenario, ...] = (
         kind=DbKind.PASSWD,
         basis=Basis.CONTRACT,
         source=f"{ACCOUNTDB}:2 (positional roles); migrate-profile:401 passes an empty file when "
-        "the base lacks the database; behaviour fixed in flipperos-btrfs-tools PR #4",
+        "the base lacks the database. Found and fixed by rafaetri in flipperos-btrfs-tools #4, "
+        "merged as 438ada7",
         story="With an empty base, an account identical in the new base and the profile must "
         "survive. If awk counts files by their first line, an empty file shifts every role.",
         base=AccountDb.of(),
@@ -220,12 +221,12 @@ SCENARIOS: tuple[Scenario, ...] = (
         id="AM-11",
         title="Account the owner deleted is not revived by a rebuilt base",
         kind=DbKind.SHADOW,
-        basis=Basis.PROPOSED,
-        source=f"{ACCOUNTDB}:23 returns the new base's record when the base changed it",
-        story="The owner deleted the factory 'user' account. Because every build re-salts the "
-        "factory hash, the new base's record differs from the old base's and the merge brings "
-        "the factory shadow record back. passwd/group lines for 'user' do not change between "
-        "builds, so they stay deleted and migrate-profile's check_db_pair warns about the orphan.",
+        basis=Basis.CONTRACT,
+        source=f"{HEADER}: 'user-deleted ones stay deleted' ({ACCOUNTDB}:25-26, added in 8c9ffc7)",
+        story="The owner deleted the factory 'user' account. Every build re-salts the factory "
+        "hash, so the new base's record always differs from the old base's. Before 8c9ffc7 the "
+        "merge therefore brought the factory shadow record back (reported on #140); since "
+        "8c9ffc7 a deletion in the profile wins.",
         base=AccountDb.of(ROOT_B1, USER_B1),
         new_base=AccountDb.of(ROOT_B2, USER_B2),
         profile=AccountDb.of(ROOT_B1),
@@ -236,12 +237,13 @@ SCENARIOS: tuple[Scenario, ...] = (
         id="AM-12",
         title="Owner password survives when the base lacks the database",
         kind=DbKind.SHADOW,
-        basis=Basis.PROPOSED,
-        source=f"{ACCOUNTDB}:27 'if (!ib) return Ol[k]' - with no base record the new base wins",
-        story="With no base record to compare against, the merge cannot tell who changed what. "
-        "Siding with the new base means a factory credential replaces the owner's. Only "
-        "reachable when the old _stock lacks the file (migrate-profile:401, :220 requires the "
-        "_stock itself), so this is an edge case.",
+        basis=Basis.CONTRACT,
+        source=f"{HEADER}: changed ones ride along from src; with no base record the profile's "
+        f"record wins ({ACCOUNTDB}:29-30, since 8c9ffc7)",
+        story="With no base record the merge cannot tell who changed what. With #4 alone, the new "
+        "base won and a factory credential replaced the owner's. Upstream confirmed this is not "
+        "reachable on a device (migrate-profile needs the _stock, and every stock carries all "
+        "eight account files), and since 8c9ffc7 the profile's record wins on that path anyway.",
         base=AccountDb.of(),
         new_base=AccountDb.of(ROOT_B2, USER_B2),
         profile=AccountDb.of(ROOT_B1, USER_OWNER),
@@ -252,16 +254,17 @@ SCENARIOS: tuple[Scenario, ...] = (
         id="AM-13",
         title="Group password the owner set survives an unchanged base",
         kind=DbKind.GSHADOW,
-        basis=Basis.PROPOSED,
-        source=f"{HEADER} says changed records ride along, but mergerec ({ACCOUNTDB}:32-38) "
-        "takes every non-list field from the new base",
+        basis=Basis.CONTRACT,
+        source=f"{HEADER}: changed ones ride along from src; mergerec applies the same 3-way rule "
+        f"to scalar group/gshadow fields ({ACCOUNTDB}:37-38, since 8c9ffc7)",
         story="The owner set a group password on 'wheel' in gshadow; the new build did not "
-        "touch that record. For group databases the merge keeps member lists from both sides "
-        "but takes the other fields from the new base, so the owner's change is dropped.",
+        "touch that field. Before 8c9ffc7 every non-list group field came from the new base, so "
+        "the owner's change was dropped (reported on #140); since 8c9ffc7 it survives.",
         base=AccountDb.of("root:*::", "wheel:!::user"),
         new_base=AccountDb.of("root:*::", "wheel:!::user"),
         profile=AccountDb.of("root:*::", "wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"),
         checks=(LineIs("wheel", "wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"),),
+        refs=("flipperone-linux-build-scripts#140",),
     ),
 )
 

@@ -9,7 +9,7 @@ import pytest
 from profileguard import targets
 from profileguard.merger import AwkImpl
 from profileguard.scenarios import ACCOUNTDB
-from tests.conftest import PR4_BLOB, PR4_FIXTURE
+from tests.conftest import OLD_DEV_BLOB, OLD_DEV_FIXTURE, PR4_BLOB, PR4_FIXTURE
 
 needs_git = pytest.mark.skipif(shutil.which("git") is None, reason="git not installed")
 
@@ -30,8 +30,9 @@ def test_modified_bundled_file_is_refused(monkeypatch: pytest.MonkeyPatch) -> No
         targets.synthetic_defect()
 
 
-def test_pr4_fixture_is_the_recorded_upstream_blob() -> None:
+def test_fixtures_are_the_recorded_upstream_blobs() -> None:
     assert targets.git_blob_id(PR4_FIXTURE.read_bytes()) == PR4_BLOB
+    assert targets.git_blob_id(OLD_DEV_FIXTURE.read_bytes()) == OLD_DEV_BLOB
 
 
 def test_synthetic_defect_is_not_reported_as_upstream_code() -> None:
@@ -67,6 +68,20 @@ def test_local_file_needs_opt_in(tmp_path: Path) -> None:
     t = targets.resolve(str(f), None, tmp_path, allow_unreviewed=True)
     assert t.trust is targets.Trust.UNREVIEWED
     assert t.provenance()["script_path"] == "x.awk"  # no local absolute path in reports
+
+
+def test_relative_script_path_still_runs(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    from profileguard.accountdb import AccountDb, DbKind
+    from profileguard.merger import run_merge
+    from tests.conftest import primary_awk
+
+    (tmp_path / "x.awk").write_text("{ print }\n")
+    monkeypatch.chdir(tmp_path)
+    t = targets.from_file(Path("x.awk"), allow_unreviewed=True)
+    assert t.script.is_absolute()
+    db = AccountDb.of("root:x")
+    out = run_merge(primary_awk(), t.script, DbKind.PASSWD, db, db, db)
+    assert out.lines == ("root:x",) * 3
 
 
 def _awk(name: str, sandboxed: bool) -> AwkImpl:
