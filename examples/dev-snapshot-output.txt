@@ -1,5 +1,5 @@
-target: snapshot:dev@bb92d87  mode: upstream-snapshot  upstream code executed: yes
-commit: bb92d87252807ee306c90e9c853b8a9af84a493f  blob: 0533182f2d87de6d350dd45f22573122ace6e087
+target: snapshot:dev@8c9ffc7  mode: upstream-snapshot  upstream code executed: yes
+commit: 8c9ffc779501da67009b77ccc0bca338549a2929  blob: fae7452c04333de1fabcca98b7e9e20504666913
 
 PASS   AM-01  [mawk] [contract] Owner password survives a rebuilt base
 PASS   AM-01  [gawk] [contract] Owner password survives a rebuilt base
@@ -37,63 +37,23 @@ PASS   AM-09  [mawk] [contract] gshadow administrators and members are both set-
 PASS   AM-09  [gawk] [contract] gshadow administrators and members are both set-merged
 PASS   AM-09  [busybox] [contract] gshadow administrators and members are both set-merged
 PASS   AM-09  [original-awk] [contract] gshadow administrators and members are both set-merged
-FAIL*  AM-10  [mawk] [contract] Empty base file keeps the other files in their roles
-         'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)
-         a 'root' entry exists and no key appears twice -> observed: no root entry
-         class: contract-violation
-         reproduce: profileguard test --target snapshot --awk mawk --scenario AM-10
-FAIL*  AM-10  [gawk] [contract] Empty base file keeps the other files in their roles
-         'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)
-         a 'root' entry exists and no key appears twice -> observed: no root entry
-         class: contract-violation
-         reproduce: profileguard test --target snapshot --awk gawk --scenario AM-10
-FAIL*  AM-10  [busybox] [contract] Empty base file keeps the other files in their roles
-         'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)
-         a 'root' entry exists and no key appears twice -> observed: no root entry
-         class: contract-violation
-         reproduce: profileguard test --target snapshot --awk busybox --scenario AM-10
-FAIL*  AM-10  [original-awk] [contract] Empty base file keeps the other files in their roles
-         'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)
-         a 'root' entry exists and no key appears twice -> observed: no root entry
-         class: contract-violation
-         reproduce: profileguard test --target snapshot --awk original-awk --scenario AM-10
-FAIL*  AM-11  [mawk] [proposed] Account the owner deleted is not revived by a rebuilt base
-         'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
-         class: finding
-         reproduce: profileguard test --target snapshot --awk mawk --scenario AM-11
-FAIL*  AM-11  [gawk] [proposed] Account the owner deleted is not revived by a rebuilt base
-         'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
-         class: finding
-         reproduce: profileguard test --target snapshot --awk gawk --scenario AM-11
-FAIL*  AM-11  [busybox] [proposed] Account the owner deleted is not revived by a rebuilt base
-         'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
-         class: finding
-         reproduce: profileguard test --target snapshot --awk busybox --scenario AM-11
-FAIL*  AM-11  [original-awk] [proposed] Account the owner deleted is not revived by a rebuilt base
-         'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
-         class: finding
-         reproduce: profileguard test --target snapshot --awk original-awk --scenario AM-11
-PASS   AM-12  [mawk] [proposed] Owner password survives when the base lacks the database
-PASS   AM-12  [gawk] [proposed] Owner password survives when the base lacks the database
-PASS   AM-12  [busybox] [proposed] Owner password survives when the base lacks the database
-PASS   AM-12  [original-awk] [proposed] Owner password survives when the base lacks the database
-FAIL*  AM-13  [mawk] [proposed] Group password the owner set survives an unchanged base
-         'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user
-         class: finding
-         reproduce: profileguard test --target snapshot --awk mawk --scenario AM-13
-FAIL*  AM-13  [gawk] [proposed] Group password the owner set survives an unchanged base
-         'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user
-         class: finding
-         reproduce: profileguard test --target snapshot --awk gawk --scenario AM-13
-FAIL*  AM-13  [busybox] [proposed] Group password the owner set survives an unchanged base
-         'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user
-         class: finding
-         reproduce: profileguard test --target snapshot --awk busybox --scenario AM-13
-FAIL*  AM-13  [original-awk] [proposed] Group password the owner set survives an unchanged base
-         'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user
-         class: finding
-         reproduce: profileguard test --target snapshot --awk original-awk --scenario AM-13
+PASS   AM-10  [mawk] [contract] Empty base file keeps the other files in their roles
+PASS   AM-10  [gawk] [contract] Empty base file keeps the other files in their roles
+PASS   AM-10  [busybox] [contract] Empty base file keeps the other files in their roles
+PASS   AM-10  [original-awk] [contract] Empty base file keeps the other files in their roles
+PASS   AM-11  [mawk] [contract] Account the owner deleted is not revived by a rebuilt base
+PASS   AM-11  [gawk] [contract] Account the owner deleted is not revived by a rebuilt base
+PASS   AM-11  [busybox] [contract] Account the owner deleted is not revived by a rebuilt base
+PASS   AM-11  [original-awk] [contract] Account the owner deleted is not revived by a rebuilt base
+PASS   AM-12  [mawk] [contract] Owner password survives when the base lacks the database
+PASS   AM-12  [gawk] [contract] Owner password survives when the base lacks the database
+PASS   AM-12  [busybox] [contract] Owner password survives when the base lacks the database
+PASS   AM-12  [original-awk] [contract] Owner password survives when the base lacks the database
+PASS   AM-13  [mawk] [contract] Group password the owner set survives an unchanged base
+PASS   AM-13  [gawk] [contract] Group password the owner set survives an unchanged base
+PASS   AM-13  [busybox] [contract] Group password the owner set survives an unchanged base
+PASS   AM-13  [original-awk] [contract] Group password the owner set survives an unchanged base
 
-52 checks: 40 passed, 12 failed (contract violations: 4, proposed-invariant findings: 8), 0 errors
+52 checks: 52 passed, 0 failed (contract violations: 0, proposed-invariant findings: 0), 0 errors
 wrote examples/dev-snapshot-report.json
 wrote examples/dev-snapshot-report.html

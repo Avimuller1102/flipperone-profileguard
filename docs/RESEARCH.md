@@ -1,5 +1,8 @@
 # Upstream research and scope decision
 
+Sections 1 to 7 record the state at research time (2026-11-23, before any contribution).
+Section 8 records what happened afterwards.
+
 Research date: 2026-11-23. Every claim is tagged **[fact]** (read in code or on a page, with the
 location given), **[interp]** (my reading of facts) or **[unverified]**.
 
@@ -138,3 +141,23 @@ cannot produce, and it would observe drift without testing behaviour.
   every non-list field comes from the new base (`mergerec`, `flipper-accountdb.awk:32-38`), even
   when the new base did not change it. A group password the owner set in `gshadow` is dropped.
   The header's "changed ones ride along" does not say whether that is meant for group fields.
+
+## 8. Outcome (2026-11-23, evening)
+
+- **[fact]** flipperdevices/flipperos-btrfs-tools#5 (this project's shell test) was opened against
+  `dev`, and the three questions were posted on #140.
+- **[fact]** Yury-MonZon (author of #140) replied the same day: "all three reproduce". He merged
+  #4 (as `438ada7`, rafaetri) and pushed
+  [`8c9ffc7`](https://github.com/flipperdevices/flipperos-btrfs-tools/commit/8c9ffc779501da67009b77ccc0bca338549a2929)
+  "accountdb: Let the profile's own changes win":
+  - AM-11: a deletion in the profile now wins (header: "user-deleted ones stay deleted").
+  - AM-12: not reachable on a device, since every stock carries all eight account files
+    ("checked on Flipper One across two builds"); the profile's record now wins on that path.
+  - AM-13: scalar group/gshadow fields follow the same 3-way rule as whole records.
+  - Regression tests for all three were added upstream to `tests/accountdb.sh`.
+  - "The checks in #5 still hold with these changes."
+- **[fact]** Verified here against `dev@8c9ffc7`: all 13 scenarios pass with mawk, gawk, BusyBox
+  awk and one-true-awk; the #5 shell test passes 12/12 with dash, bash and BusyBox sh; the
+  Hypothesis properties hold.
+- The fixes are upstream's. The bundled snapshot moved to `dev@8c9ffc7`, and AM-11 to AM-13
+  changed from `proposed` to `contract`, citing the new header and commit.

@@ -25,7 +25,7 @@ Each report states its mode and whether upstream code ran:
 
 | Mode | Code executed | Upstream code? |
 |---|---|---|
-| `upstream-snapshot` | `src/profileguard/upstream_snapshot/flipper-accountdb.awk`, blob-checked against `dev@bb92d87` | yes |
+| `upstream-snapshot` | `src/profileguard/upstream_snapshot/flipper-accountdb.awk`, blob-checked against `dev@8c9ffc7` | yes |
 | `upstream-git` | the script at a commit of a local checkout, extracted with `git show` (nothing is checked out or built) | yes |
 | `synthetic-fixture` | the deliberately broken copy | no |
 | `external-file` | any `.awk` file given on the command line | unknown, only its blob id is recorded |

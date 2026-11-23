@@ -1,5 +1,19 @@
 # Upstream contribution plan
 
+## Status (2026-11-23)
+
+| | |
+|---|---|
+| Shell test | [flipperdevices/flipperos-btrfs-tools#5](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/5), open, awaiting review; passes on `dev@8c9ffc7` |
+| Questions on #140 | posted; answered by Yury-MonZon the same day |
+| AM-11, AM-13 | fixed upstream in `8c9ffc7` (Yury-MonZon), with tests in upstream `tests/accountdb.sh` |
+| AM-12 | not reachable on a device (every stock carries all eight account files); `8c9ffc7` makes the profile win on that path |
+| AM-10 | fixed by rafaetri in #4, merged as `438ada7` |
+
+Sections below are the plan and the texts as prepared before posting. They are kept for the
+record. The issue comment as posted used fully qualified references
+(`flipperdevices/flipperos-btrfs-tools#4`, `#5`) so the links resolve from the other repository.
+
 ## 1. What is addressed
 
 [flipperone-linux-build-scripts#140](https://github.com/flipperdevices/flipperone-linux-build-scripts/issues/140),
@@ -100,7 +114,7 @@ Post it only after the PR above is open. Replace `<PR link>`.
 4. This repository stays a place for the broader exploration (properties, cross-awk, revision
    compare). Upstream does not need to adopt Python.
 
-## 6. Questions maintainers need to answer first
+## 6. Questions maintainers needed to answer (1, 2 and 4 answered in `8c9ffc7`; 3 and 5 still open)
 
 1. Should a profile's deletion (or rename) of an account survive an update when the base re-salted
    it? (AM-11)

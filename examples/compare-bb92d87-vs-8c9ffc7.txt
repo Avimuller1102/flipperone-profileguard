@@ -1,0 +1,9 @@
+baseline:  bb92d87@bb92d87 (upstream-git, upstream-merged)
+candidate: origin/dev@8c9ffc7 (upstream-git, upstream-merged)
+
+change            id     awk           basis     baseline -> candidate
+fixed             AM-10  mawk          contract  FAIL -> PASS
+fixed             AM-11  mawk          contract  FAIL -> PASS
+fixed             AM-13  mawk          contract  FAIL -> PASS
+
+fixed: 3, unchanged: 10

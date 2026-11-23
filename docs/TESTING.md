@@ -5,12 +5,13 @@
 | Layer | Where | Runs upstream code | Hardware |
 |---|---|---|---|
 | Unit | `tests/unit/` | no: parsing, checks, trust gates, report validation, exit codes, process limits | none |
-| Integration | `tests/integration/` | yes: dev snapshot, PR #4 copy, synthetic defect, and the proposed shell test under every shell × awk installed | none |
+| Integration | `tests/integration/` | yes: the snapshot (dev@8c9ffc7), dev@bb92d87 and the PR #4 copy as fixtures, the synthetic defect, and the proposed shell test under every shell × awk installed | none |
 | Property | `tests/property/` | yes: Hypothesis generates account databases, the real script merges them | none |
 | Hardware | the matrix below | yes | RK3576 board, **not run** |
 
 `tests/integration/test_upstream_behaviour.py` pins what upstream does today, for every awk
-installed: dev fails AM-10, AM-11 and AM-13, and the PR #4 copy fails AM-11, AM-12 and AM-13. It
+installed: the snapshot (dev@8c9ffc7) fails nothing, dev@bb92d87 fails AM-10, AM-11 and AM-13, and
+the PR #4 copy fails AM-11, AM-12 and AM-13. It
 also checks that all awks agree byte for byte. If upstream changes, these tests fail on purpose,
 and someone must look at the change before updating them.
 
@@ -23,8 +24,8 @@ The properties restate `flipper-accountdb.awk:3-5`:
 - no key appears twice.
 
 Two more properties: running the same update twice changes nothing, and group members are
-three-way set-merged. Generated files always contain a root entry, so the dev snapshot's
-empty-file bug is left to AM-10.
+three-way set-merged. Generated files always contain a root entry, so the empty-file case
+is left to AM-10.
 
 ## Running
 
@@ -40,9 +41,9 @@ repository's GitHub Actions.
 
 | Environment | Status |
 |---|---|
-| Linux, Python 3.11.18 / 3.12.3 / 3.13.18: full pytest, mypy, `--expect-fail` run | verified |
+| Linux, Python 3.11.18 / 3.12.3 / 3.13.18: full pytest, mypy, `test --strict` | verified |
 | awk: mawk 1.3.4, gawk 5.2.1, BusyBox 1.36.1 awk, one-true-awk 20231127 | verified, identical output |
-| Shell test: dash 0.5.12, bash 5.2, BusyBox 1.36.1 sh × the four awks, dev and PR #4 | verified: 24 distinct combinations (3 shells × 4 awks × 2 revisions) |
+| Shell test: dash 0.5.12, bash 5.2, BusyBox 1.36.1 sh × the four awks; dev@8c9ffc7, dev@bb92d87, PR #4 | verified: 36 distinct combinations (3 shells × 4 awks × 3 revisions) |
 | macOS (GitHub `macos-latest`, image macos-26-arm64, Apple awk 20200816), Python 3.12 | verified in CI: 77 passed, 4 skipped (gawk-only and multi-awk tests), same expected failures |
 | GitHub Actions workflow | verified: Linux 3.11/3.12/3.13 (115 passed each), macOS, wheel job, report artifacts |
 | Windows | not supported (needs a POSIX awk); WSL untested |
@@ -57,6 +58,6 @@ None of this has been executed by this project.
 | H-1 | Set a password for `user` in profile A; `update-profile A` to a newer build | Log in to A with the new password works; `user`/`user` is refused | NOT RUN |
 | H-2 | `passwd -l user` in A; update A | Password login for `user` refused after update | NOT RUN |
 | H-3 | Create `alice`, add to `sudo`, remove `user` from `sudo`; update | `alice` logs in and has sudo; `user` is not in `sudo` | NOT RUN |
-| H-4 | `userdel user` in A (after creating another admin); update A | Record whether `/etc/shadow` holds `user` again and what `migrate-profile` warned (AM-11) | NOT RUN |
+| H-4 | `userdel user` in A (after creating another admin); update A | Since `8c9ffc7`: `user` stays absent from `/etc/shadow` (AM-11) | NOT RUN |
 | H-5 | Never touch profile B; update B | B accepts `user`/`user` (documented current behaviour, #140 decision 4) | NOT RUN |
 | H-6 | Run `migrate-profile` by hand without `-a` (dry run by default, `migrate-profile:30`) | Dry run lists the shadow change and writes nothing | NOT RUN |

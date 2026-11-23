@@ -17,8 +17,8 @@ a time with
 That merge decides whether a profile keeps the password its owner set or gets the factory one
 back. The image build runs `chpasswd` every time, so the factory record differs between any two
 builds. The merge therefore has to tell "the build changed this" apart from "the owner changed
-this" on every update. The script's contract is a short header comment, and on upstream `dev` it
-has no tests.
+this" on every update. The script's contract is a short header comment. When this project
+started, upstream had no tests for it.
 
 ## What it does
 
@@ -26,7 +26,8 @@ has no tests.
   expectation is either:
   - **contract**: written down upstream, so a failure means the script does not do what upstream says;
   - **proposed**: a security property suggested here that upstream has not decided, so a failure
-    is a question for maintainers, not a bug report.
+    is a question for maintainers, not a bug report. (All 13 scenarios are `contract` today: the
+    three that started as questions were decided upstream, see below.)
 - Runs every scenario with each awk it finds (mawk, gawk, BusyBox awk, one-true-awk) and checks
   they agree.
 - Compares two upstream revisions and names each change: fixed, regressed or behaviour-change.
@@ -45,15 +46,36 @@ has no tests.
 - It does not decide security policy for Flipper OS.
 - No result here comes from hardware. See [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
 
-## What it found, and who found it
+## What happened upstream
 
-| Kind | Scenario | Status |
+| Scenario | What it showed on `dev@bb92d87` | Outcome |
 |---|---|---|
-| Upstream defect **already found and fixed by someone else** | AM-10: an empty base file shifts the roles of the other files | Fixed in the open [PR #4](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/4) by rafaetri. Reproduced here; not found by this project. |
-| Behaviour questions for maintainers | AM-11: an account the owner deleted gets its factory shadow record back on update · AM-12: with PR #4, if the base lacks the file, the factory record wins over the owner's · AM-13: an owner-set group password is dropped | Unconfirmed policy. Not presented as bugs. See [docs/RESEARCH.md §7](docs/RESEARCH.md#7-results-of-running-it-summary-full-output-in-examples). |
-| Synthetic defect | `synthetic-defect` | Written for this project to show detection; not upstream code. |
+| AM-10: an empty base file shifted the roles of the other files | contract violation | **Found and fixed by rafaetri** in [PR #4](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/4), merged as `438ada7`. Reproduced here, not found here. |
+| AM-11: an account the owner deleted got its factory shadow record back on update | question asked on [#140](https://github.com/flipperdevices/flipperone-linux-build-scripts/issues/140) | Reproduced by the maintainer, **fixed by Yury-MonZon in [`8c9ffc7`](https://github.com/flipperdevices/flipperos-btrfs-tools/commit/8c9ffc779501da67009b77ccc0bca338549a2929)**: a deletion in the profile now wins. |
+| AM-12: with #4 alone, the factory record won over the owner's when the base lacked the file | question asked on #140 | Not reachable on a device: every stock carries all eight account files (checked on Flipper One by the maintainer). `8c9ffc7` makes the profile's record win on that path anyway. |
+| AM-13: a group password the owner set was dropped | question asked on #140 | **Fixed in `8c9ffc7`**: scalar group/gshadow fields follow the same 3-way rule as whole records. |
 
-No new upstream defect is confirmed.
+The fixes are upstream's work. This project's part was writing the scenarios that surfaced
+AM-11 to AM-13 and proposing the contract checks as
+[flipperos-btrfs-tools#5](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/5), which
+still passes after `8c9ffc7`. Upstream added its own regression tests for all three cases in
+`tests/accountdb.sh`.
+
+The bundled snapshot is now `dev@8c9ffc7`, and it passes all 13 scenarios. The pre-fix revision
+is kept as a test fixture to show what changed:
+
+```text
+$ profileguard compare --repo ../flipperos-btrfs-tools --baseline bb92d87 --candidate origin/dev --awk mawk
+baseline:  bb92d87@bb92d87 (upstream-git, upstream-merged)
+candidate: origin/dev@8c9ffc7 (upstream-git, upstream-merged)
+
+change            id     awk           basis     baseline -> candidate
+fixed             AM-10  mawk          contract  FAIL -> PASS
+fixed             AM-11  mawk          contract  FAIL -> PASS
+fixed             AM-13  mawk          contract  FAIL -> PASS
+
+fixed: 3, unchanged: 10
+```
 
 ## Install
 
@@ -83,7 +105,7 @@ profileguard test --all-awks --html report.html
 profileguard compare --baseline snapshot --candidate synthetic-defect
 ```
 
-`--target snapshot` (the default) is an unmodified copy of upstream's script from `dev@bb92d87`,
+`--target snapshot` (the default) is an unmodified copy of upstream's script from `dev@8c9ffc7`,
 bundled so the tool works offline. Its git blob id is checked before every run.
 
 ## Trust levels
@@ -116,8 +138,8 @@ Real output from `profileguard test --awk mawk` on Linux. All four awks are in
 `examples/dev-snapshot-output.txt`.
 
 ```text
-target: snapshot:dev@bb92d87  mode: upstream-snapshot  upstream code executed: yes
-commit: bb92d87252807ee306c90e9c853b8a9af84a493f  blob: 0533182f2d87de6d350dd45f22573122ace6e087
+target: snapshot:dev@8c9ffc7  mode: upstream-snapshot  upstream code executed: yes
+commit: 8c9ffc779501da67009b77ccc0bca338549a2929  blob: fae7452c04333de1fabcca98b7e9e20504666913
 
 PASS   AM-01  [mawk] [contract] Owner password survives a rebuilt base
 PASS   AM-02  [mawk] [contract] Owner password survives an unchanged base
@@ -128,46 +150,43 @@ PASS   AM-06  [mawk] [contract] System account added by the new build appears
 PASS   AM-07  [mawk] [contract] Membership the owner removed stays removed
 PASS   AM-08  [mawk] [contract] Memberships added on both sides are united
 PASS   AM-09  [mawk] [contract] gshadow administrators and members are both set-merged
-FAIL*  AM-10  [mawk] [contract] Empty base file keeps the other files in their roles
-         'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)
-         a 'root' entry exists and no key appears twice -> observed: no root entry
-         class: contract-violation
-         reproduce: profileguard test --target snapshot --awk mawk --scenario AM-10
-FAIL*  AM-11  [mawk] [proposed] Account the owner deleted is not revived by a rebuilt base
-         'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
-         class: finding
-         reproduce: profileguard test --target snapshot --awk mawk --scenario AM-11
-PASS   AM-12  [mawk] [proposed] Owner password survives when the base lacks the database
-FAIL*  AM-13  [mawk] [proposed] Group password the owner set survives an unchanged base
-         'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user
-         class: finding
-         reproduce: profileguard test --target snapshot --awk mawk --scenario AM-13
+PASS   AM-10  [mawk] [contract] Empty base file keeps the other files in their roles
+PASS   AM-11  [mawk] [contract] Account the owner deleted is not revived by a rebuilt base
+PASS   AM-12  [mawk] [contract] Owner password survives when the base lacks the database
+PASS   AM-13  [mawk] [contract] Group password the owner set survives an unchanged base
 
-13 checks: 10 passed, 3 failed (contract violations: 1, proposed-invariant findings: 2), 0 errors
+13 checks: 13 passed, 0 failed (contract violations: 0, proposed-invariant findings: 0), 0 errors
 ```
 
-CI pins exactly these failures with `profileguard test --expect-fail AM-10,AM-11,AM-13`. Any other
-failure, or one of these starting to pass, fails the build.
+CI runs this with `--strict` on every awk: any failure fails the build. What older revisions fail
+is pinned in `tests/integration/test_upstream_behaviour.py`.
 
 ### The synthetic regression being caught
 
+`synthetic-defect` changes one line of the snapshot: when the profile changed a record, the new
+build wins instead. It is not upstream code and not a known upstream bug.
+
 ```text
 $ profileguard compare --baseline snapshot --candidate synthetic-defect --awk mawk
-baseline:  snapshot:dev@bb92d87 (upstream-snapshot, bundled)
+baseline:  snapshot:dev@8c9ffc7 (upstream-snapshot, bundled)
 candidate: synthetic-defect (synthetic-fixture, bundled)
 
 change            id     awk           basis     baseline -> candidate
 regressed         AM-01  mawk          contract  PASS -> FAIL
                   candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+regressed         AM-02  mawk          contract  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::
 regressed         AM-04  mawk          contract  PASS -> FAIL
                   candidate: 'user' is exactly: user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7::: (still locked) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+regressed         AM-12  mawk          contract  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
 
-regressed: 2, unchanged: 11
+regressed: 4, unchanged: 9
 ```
 
-The command exits with code 1. After the defect, both the owner's password and the owner's lock
-come back as the factory record. The Hypothesis property tests also find this defect without
-being told where it is.
+The command exits with code 1. After the defect, the owner's password and lock come back as the
+factory record. The Hypothesis property tests also find this defect without being told where it
+is.
 
 ## Tests
 

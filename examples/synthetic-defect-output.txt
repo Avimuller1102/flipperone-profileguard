@@ -1,11 +1,14 @@
 target: synthetic-defect  mode: synthetic-fixture  upstream code executed: no
-blob: 83938f2c017999ef345e430e1b6c0145d5b649d6
+blob: 8fc5717cd06f4eddd32f5afba0c7015e60c29675
 
 FAIL*  AM-01  [mawk] [contract] Owner password survives a rebuilt base
          'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
          class: contract-violation
          reproduce: profileguard test --target synthetic-defect --awk mawk --scenario AM-01
-PASS   AM-02  [mawk] [contract] Owner password survives an unchanged base
+FAIL*  AM-02  [mawk] [contract] Owner password survives an unchanged base
+         'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::
+         class: contract-violation
+         reproduce: profileguard test --target synthetic-defect --awk mawk --scenario AM-02
 PASS   AM-03  [mawk] [contract] Never-customized account follows the new base
 FAIL*  AM-04  [mawk] [contract] Locked account stays locked
          'user' is exactly: user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7::: (still locked) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
@@ -16,20 +19,13 @@ PASS   AM-06  [mawk] [contract] System account added by the new build appears
 PASS   AM-07  [mawk] [contract] Membership the owner removed stays removed
 PASS   AM-08  [mawk] [contract] Memberships added on both sides are united
 PASS   AM-09  [mawk] [contract] gshadow administrators and members are both set-merged
-FAIL*  AM-10  [mawk] [contract] Empty base file keeps the other files in their roles
-         'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)
-         a 'root' entry exists and no key appears twice -> observed: no root entry
+PASS   AM-10  [mawk] [contract] Empty base file keeps the other files in their roles
+PASS   AM-11  [mawk] [contract] Account the owner deleted is not revived by a rebuilt base
+FAIL*  AM-12  [mawk] [contract] Owner password survives when the base lacks the database
+         'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
          class: contract-violation
-         reproduce: profileguard test --target synthetic-defect --awk mawk --scenario AM-10
-FAIL*  AM-11  [mawk] [proposed] Account the owner deleted is not revived by a rebuilt base
-         'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
-         class: finding
-         reproduce: profileguard test --target synthetic-defect --awk mawk --scenario AM-11
-PASS   AM-12  [mawk] [proposed] Owner password survives when the base lacks the database
-FAIL*  AM-13  [mawk] [proposed] Group password the owner set survives an unchanged base
-         'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user
-         class: finding
-         reproduce: profileguard test --target synthetic-defect --awk mawk --scenario AM-13
+         reproduce: profileguard test --target synthetic-defect --awk mawk --scenario AM-12
+PASS   AM-13  [mawk] [contract] Group password the owner set survives an unchanged base
 
-13 checks: 8 passed, 5 failed (contract violations: 3, proposed-invariant findings: 2), 0 errors
+13 checks: 9 passed, 4 failed (contract violations: 4, proposed-invariant findings: 0), 0 errors
 wrote examples/synthetic-defect-report.json

@@ -1,6 +1,16 @@
 # Changelog
 
-## 0.1.0 (unreleased)
+## 0.1.1 (2026-11-23)
+
+- Bundled snapshot moved to upstream `dev@8c9ffc7`, which fixes AM-11 and AM-13 (Yury-MonZon)
+  and includes #4 (rafaetri, AM-10). All 13 scenarios pass on it.
+- AM-11, AM-12 and AM-13 are now `contract`: upstream documented the behaviour.
+- `dev@bb92d87` kept as a test fixture; the synthetic defect is regenerated from the new snapshot.
+- CI requires zero failures (`test --strict`) instead of a list of expected ones.
+- Fix: a local `.awk` target given as a relative path failed to open, because awk runs from a
+  temporary directory.
+
+## 0.1.0 (2026-11-23)
 
 - 13 scenarios for `flipper-accountdb.awk` (9 contract, 4 proposed), run against the real
   upstream script with every awk found.

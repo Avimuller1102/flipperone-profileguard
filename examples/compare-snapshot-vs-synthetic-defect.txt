@@ -1,10 +1,14 @@
-baseline:  snapshot:dev@bb92d87 (upstream-snapshot, bundled)
+baseline:  snapshot:dev@8c9ffc7 (upstream-snapshot, bundled)
 candidate: synthetic-defect (synthetic-fixture, bundled)
 
 change            id     awk           basis     baseline -> candidate
 regressed         AM-01  mawk          contract  PASS -> FAIL
                   candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+regressed         AM-02  mawk          contract  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::
 regressed         AM-04  mawk          contract  PASS -> FAIL
                   candidate: 'user' is exactly: user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7::: (still locked) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+regressed         AM-12  mawk          contract  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
 
-regressed: 2, unchanged: 11
+regressed: 4, unchanged: 9
