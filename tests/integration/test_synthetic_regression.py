@@ -79,7 +79,11 @@ def test_property_search_finds_the_defect_without_being_told_where() -> None:
             return True
         return False
 
-    b, o, t = find(st.tuples(side, side, side), violates, settings=settings(database=None))
+    b, o, t = find(
+        st.tuples(side, side, side),
+        violates,
+        settings=settings(database=None, max_examples=2000, derandomize=True),
+    )
     # Shrunk to one account that both the new build and the profile changed.
     changed_both = [k for k in t if k in b and k in o and t[k] != b[k] and o[k] != b[k]]
     assert changed_both
