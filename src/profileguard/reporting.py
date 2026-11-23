@@ -7,6 +7,7 @@ import json
 import platform
 import sys
 from datetime import UTC, datetime
+from importlib import resources
 from typing import Any
 
 from profileguard import __version__
@@ -79,6 +80,67 @@ def build_report(target: Target, awks: list[AwkImpl], results: list[Result]) -> 
         "results": [result_dict(r) for r in results],
         "limitations": list(LIMITATIONS),
     }
+
+
+def _schema() -> dict[str, Any]:
+    text = resources.files("profileguard").joinpath("report-schema.json").read_text("utf-8")
+    loaded: dict[str, Any] = json.loads(text)
+    return loaded
+
+
+def _check(obj: Any, schema: dict[str, Any], where: str, out: list[str]) -> None:
+    """The subset of JSON Schema the report schema uses: required, enum, const, type, items."""
+    types = schema.get("type")
+    allowed = types if isinstance(types, list) else [types] if types else []
+    py = {"object": dict, "array": list, "string": str, "boolean": bool, "null": type(None)}
+    if allowed and not any(isinstance(obj, py[t]) for t in allowed if t in py):
+        out.append(f"{where}: expected {'/'.join(allowed)}")
+        return
+    if "const" in schema and obj != schema["const"]:
+        out.append(f"{where}: must be {schema['const']!r}")
+    if "enum" in schema and obj not in schema["enum"]:
+        out.append(f"{where}: {obj!r} not one of {schema['enum']}")
+    if isinstance(obj, dict):
+        for key in schema.get("required", []):
+            if key not in obj:
+                out.append(f"{where}: missing '{key}'")
+        for key, sub in schema.get("properties", {}).items():
+            if key in obj:
+                _check(obj[key], sub, f"{where}.{key}", out)
+    if isinstance(obj, list) and "items" in schema:
+        for i, item in enumerate(obj):
+            _check(item, schema["items"], f"{where}[{i}]", out)
+
+
+def validate(report: Any) -> list[str]:
+    """Problems that make a report unusable: schema violations and internal inconsistencies."""
+    problems: list[str] = []
+    _check(report, _schema(), "report", problems)
+    if problems:
+        return problems
+    results = report["results"]
+    if not results:
+        problems.append("report.results: empty")
+    pairs = [(r["scenario_id"], r["awk"]) for r in results]
+    if len(pairs) != len(set(pairs)):
+        problems.append("report.results: a scenario/awk pair appears twice")
+    recount = summarize_dicts(results)
+    for key, value in recount.items():
+        if report["summary"].get(key) != value:
+            problems.append(f"report.summary.{key}: {report['summary'].get(key)} != {value}")
+    awks = {a["name"] for a in report["environment"]["awk"]}
+    if {r["awk"] for r in results} - awks:
+        problems.append("report.results: an awk not listed in report.environment.awk")
+    return problems
+
+
+def summarize_dicts(results: list[dict[str, Any]]) -> dict[str, int]:
+    out = {"total": len(results)}
+    for status in Status:
+        out[status.value] = sum(r["status"] == status.value for r in results)
+    out["contract_violations"] = sum(r["classification"] == "contract-violation" for r in results)
+    out["findings"] = sum(r["classification"] == "finding" for r in results)
+    return out
 
 
 def write_json(report: dict[str, Any], path: str) -> None:

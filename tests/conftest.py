@@ -40,4 +40,5 @@ def snapshot() -> targets.Target:
 
 @pytest.fixture(scope="session")
 def pr4() -> targets.Target:
-    return targets.from_file(PR4_FIXTURE)
+    # Read before it was added (tests/fixtures/README.md); unreviewed in the trust model.
+    return targets.from_file(PR4_FIXTURE, allow_unreviewed=True)

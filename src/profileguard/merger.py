@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextlib
 import shutil
 import subprocess
 import tempfile
@@ -15,6 +16,35 @@ from profileguard.accountdb import AccountDb, DbKind
 KNOWN_AWKS: tuple[str, ...] = ("mawk", "gawk", "busybox", "original-awk", "nawk", "awk")
 
 TIMEOUT_SECONDS = 20
+CPU_SECONDS = 10
+OUTPUT_LIMIT_BYTES = 8 * 1024 * 1024
+MEMORY_LIMIT_BYTES = 1024 * 1024 * 1024
+
+try:
+    import resource
+
+    _HAVE_RESOURCE = True
+except ImportError:  # Windows
+    _HAVE_RESOURCE = False
+
+
+def _limit_resources() -> None:
+    """Run in the child before exec: bound CPU, file size (stdout is a file), memory and cores.
+
+    These limit damage from a runaway script; they do not stop a script from reading files or
+    starting programs. Limits the platform refuses (RLIMIT_AS on macOS) are skipped.
+    """
+    for name, value in (
+        ("RLIMIT_CPU", CPU_SECONDS),
+        ("RLIMIT_FSIZE", OUTPUT_LIMIT_BYTES),
+        ("RLIMIT_AS", MEMORY_LIMIT_BYTES),
+        ("RLIMIT_CORE", 0),
+    ):
+        limit = getattr(resource, name, None)
+        if limit is None:
+            continue
+        with contextlib.suppress(ValueError, OSError):
+            resource.setrlimit(limit, (value, value))
 
 
 class MergeError(RuntimeError):
@@ -98,7 +128,9 @@ def run_merge(
 
     ``base`` is the _stock the profile was made from, ``new_base`` the new build's copy being
     migrated onto (migrate-profile's dst, the awk script's "ours"), and ``profile`` the user's
-    profile (src, "theirs"). Files are written under a private temporary directory only.
+    profile (src, "theirs"). Inputs and outputs live in a private temporary directory, the child
+    gets a minimal environment, a timeout and resource limits. This is containment of mistakes,
+    not a sandbox: awk runs as the invoking user and can read whatever that user can.
     """
     with tempfile.TemporaryDirectory(prefix="profileguard-") as tmp:
         tmpdir = Path(tmp)
@@ -108,20 +140,27 @@ def run_merge(
             p.write_text(db.render(), encoding="utf-8")
             paths.append(str(p))
         argv = [*awk.argv, "-v", f"LF={kind.lf_arg}", "-f", str(script), *paths]
+        out_path, err_path = tmpdir / "stdout", tmpdir / "stderr"
         try:
-            proc = subprocess.run(
-                argv,
-                capture_output=True,
-                text=True,
-                timeout=TIMEOUT_SECONDS,
-                cwd=tmpdir,
-                stdin=subprocess.DEVNULL,
-                env={"PATH": "/usr/bin:/bin", "LC_ALL": "C"},
-            )
+            with out_path.open("wb") as out, err_path.open("wb") as err:
+                proc = subprocess.run(
+                    argv,
+                    stdout=out,
+                    stderr=err,
+                    timeout=TIMEOUT_SECONDS,
+                    cwd=tmpdir,
+                    stdin=subprocess.DEVNULL,
+                    env={"PATH": "/usr/bin:/bin", "LC_ALL": "C", "TMPDIR": str(tmpdir)},
+                    preexec_fn=_limit_resources if _HAVE_RESOURCE else None,
+                )
         except subprocess.TimeoutExpired as exc:
             raise MergeError(f"{awk.name} timed out after {TIMEOUT_SECONDS}s") from exc
         except OSError as exc:
             raise MergeError(f"could not start {awk.name}: {exc}") from exc
+        stdout = out_path.read_bytes()[:OUTPUT_LIMIT_BYTES].decode("utf-8", "replace")
+        stderr = err_path.read_bytes()[:500].decode("utf-8", "replace").strip()
+    if proc.returncode < 0:
+        raise MergeError(f"{awk.name} was killed by signal {-proc.returncode} (resource limit?)")
     if proc.returncode != 0:
-        raise MergeError(f"{awk.name} exited {proc.returncode}: {proc.stderr.strip()[:500]}")
-    return AccountDb.parse(proc.stdout)
+        raise MergeError(f"{awk.name} exited {proc.returncode}: {stderr}")
+    return AccountDb.parse(stdout)

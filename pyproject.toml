@@ -31,7 +31,7 @@ Source = "https://github.com/avimuller1102/flipperone-profileguard"
 where = ["src"]
 
 [tool.setuptools.package-data]
-profileguard = ["upstream_snapshot/*", "fixtures/*"]
+profileguard = ["upstream_snapshot/*", "fixtures/*", "report-schema.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

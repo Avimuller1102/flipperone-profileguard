@@ -1,7 +1,13 @@
 """profileguard command line.
 
-Exit codes: 0 every contract scenario passed; 1 a contract scenario failed or errored (with
---strict, also a proposed-invariant finding); 2 usage or environment problem.
+Exit codes:
+  0  as expected: every contract scenario passed, or with --expect-fail exactly the listed
+     scenarios failed
+  1  scenario failures: a contract scenario failed (with --strict, also a proposed-invariant
+     finding), or the failures differ from --expect-fail, or compare found a regression
+  2  usage, environment or policy problem: bad arguments, a missing awk, unreviewed code without
+     the flags that allow it, a modified installation, an invalid report
+  3  execution error: awk crashed, timed out or hit a resource limit
 """
 
 from __future__ import annotations
@@ -14,10 +20,10 @@ from pathlib import Path
 
 from profileguard import __version__, compare, reporting, targets
 from profileguard.merger import KNOWN_AWKS, AwkImpl, available_awks, find_awk
-from profileguard.runner import Result, run_all
+from profileguard.runner import Result, Status, run_all
 from profileguard.scenarios import SCENARIOS, Scenario, by_id
 
-EXIT_OK, EXIT_FAIL, EXIT_USAGE = 0, 1, 2
+EXIT_OK, EXIT_FAIL, EXIT_USAGE, EXIT_ERROR = 0, 1, 2, 3
 
 
 def _select_awks(names: list[str] | None, all_awks: bool) -> list[AwkImpl]:
@@ -45,11 +51,17 @@ def _select_scenarios(ids: list[str] | None) -> list[Scenario]:
 
 
 def _add_target_args(p: argparse.ArgumentParser) -> None:
-    p.add_argument("--repo", type=Path, help="local clone of flipperos-btrfs-tools")
+    p.add_argument("--repo", type=Path, help="a clone of flipperos-btrfs-tools you made yourself")
     p.add_argument(
-        "--allow-unmerged",
+        "--allow-unreviewed",
         action="store_true",
-        help="run a git revision that is not on the remote default branch",
+        help="run code that is not merged upstream (an unmerged PR, a fork, a local .awk file) "
+        "after you have read it; it then runs only under gawk --sandbox",
+    )
+    p.add_argument(
+        "--allow-unsandboxed-awk",
+        action="store_true",
+        help="with --allow-unreviewed, also run it under awks that have no sandbox",
     )
     p.add_argument(
         "--awk",
@@ -61,7 +73,7 @@ def _add_target_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--scenario", action="append", metavar="ID", help="run only this scenario")
 
 
-def cmd_doctor(_: argparse.Namespace) -> int:
+def cmd_doctor(args: argparse.Namespace) -> int:
     ok = True
     print(f"profileguard {__version__}, Python {sys.version.split()[0]}")
     awks = available_awks()
@@ -78,17 +90,16 @@ def cmd_doctor(_: argparse.Namespace) -> int:
     if not awks:
         print("  ERROR: no awk found; install mawk or gawk")
         ok = False
+    for name in args.require or []:
+        if find_awk(name) is None:
+            print(f"  ERROR: required awk '{name}' not found")
+            ok = False
     print(f"  git   {'found' if shutil.which('git') else 'not found (needed only for --repo)'}")
     try:
         snap = targets.snapshot()
-        good = snap.blob == targets.SNAPSHOT_BLOB
-        print(
-            f"  snapshot {snap.label} blob {snap.blob} "
-            f"{'matches upstream' if good else 'DOES NOT MATCH ' + targets.SNAPSHOT_BLOB}"
-        )
-        ok = ok and good
+        print(f"  snapshot {snap.label} blob {snap.blob} matches upstream")
         targets.synthetic_defect()
-        print("  synthetic defect fixture present")
+        print(f"  synthetic defect fixture blob {targets.SYNTHETIC_BLOB} as released")
     except targets.TargetError as exc:
         print(f"  ERROR: {exc}")
         ok = False
@@ -111,13 +122,30 @@ def cmd_scenarios(args: argparse.Namespace) -> int:
 def _run(
     args: argparse.Namespace, spec: str, workdir: Path
 ) -> tuple[targets.Target, list[AwkImpl], list[Result]]:
-    target = targets.resolve(spec, args.repo, workdir, args.allow_unmerged)
+    target = targets.resolve(spec, args.repo, workdir, args.allow_unreviewed)
     awks = _select_awks(args.awk, args.all_awks)
+    targets.check_execution_policy(target, awks, args.allow_unsandboxed_awk)
     results = run_all(_select_scenarios(args.scenario), target, awks)
     return target, awks, results
 
 
+def _expectation_problems(results: list[Result], expected: set[str]) -> list[str]:
+    """Where the failing scenarios differ from the expected set, per awk."""
+    problems = []
+    for awk in sorted({r.awk.name for r in results}):
+        ran = {r.scenario.id for r in results if r.awk.name == awk}
+        failed = {r.scenario.id for r in results if r.awk.name == awk and r.status is Status.FAIL}
+        want = expected & ran
+        for sid in sorted(failed - want):
+            problems.append(f"[{awk}] {sid} failed but was not expected to")
+        for sid in sorted(want - failed):
+            problems.append(f"[{awk}] {sid} was expected to fail but passed")
+    return problems
+
+
 def cmd_test(args: argparse.Namespace) -> int:
+    ids = [i for arg in args.expect_fail or [] for i in arg.split(",") if i]
+    expected = {s.id for s in _select_scenarios(ids)} if ids else set()
     with targets.new_workdir() as wd:
         target, awks, results = _run(args, args.target, Path(wd))
     print(reporting.text_report(target, results, args.verbose))
@@ -128,6 +156,15 @@ def cmd_test(args: argparse.Namespace) -> int:
     if args.html:
         Path(args.html).write_text(reporting.html_report(report), encoding="utf-8")
         print(f"wrote {args.html}")
+    if any(r.status is Status.ERROR for r in results):
+        return EXIT_ERROR
+    if args.expect_fail is not None:
+        problems = _expectation_problems(results, expected)
+        for p in problems:
+            print(f"unexpected: {p}")
+        if not problems:
+            print(f"failures match --expect-fail: {', '.join(sorted(expected))}")
+        return EXIT_FAIL if problems else EXIT_OK
     failing = any(r.counts_against_exit for r in results)
     if args.strict:
         failing = failing or any(r.classification == "finding" for r in results)
@@ -141,9 +178,13 @@ def cmd_compare(args: argparse.Namespace) -> int:
     deltas = compare.compare(base_r, cand_r)
     print(
         compare.render(
-            deltas, f"{base_t.label} ({base_t.mode.value})", f"{cand_t.label} ({cand_t.mode.value})"
+            deltas,
+            f"{base_t.label} ({base_t.mode.value}, {base_t.trust.value})",
+            f"{cand_t.label} ({cand_t.mode.value}, {cand_t.trust.value})",
         )
     )
+    if any(r.status is Status.ERROR for r in (*base_r, *cand_r)):
+        return EXIT_ERROR
     return EXIT_FAIL if any(d.is_regression for d in deltas) else EXIT_OK
 
 
@@ -153,11 +194,15 @@ def cmd_report(args: argparse.Namespace) -> int:
     except (OSError, json.JSONDecodeError) as exc:
         reporting.eprint(f"error: cannot read {args.json_report}: {exc}")
         return EXIT_USAGE
-    if report.get("schema") != reporting.SCHEMA:
-        reporting.eprint(f"error: not a {reporting.SCHEMA} report")
+    problems = reporting.validate(report)
+    if problems:
+        for p in problems:
+            reporting.eprint(f"invalid report: {p}")
         return EXIT_USAGE
-    Path(args.html).write_text(reporting.html_report(report), encoding="utf-8")
-    print(f"wrote {args.html}")
+    print(f"{args.json_report}: valid {reporting.SCHEMA} report")
+    if args.html:
+        Path(args.html).write_text(reporting.html_report(report), encoding="utf-8")
+        print(f"wrote {args.html}")
     return EXIT_OK
 
 
@@ -167,13 +212,17 @@ def build_parser() -> argparse.ArgumentParser:
         description="Check the account-database merge that Flipper OS profile migration uses "
         "(flipperos-btrfs-tools libs/flipper-accountdb.awk) against security scenarios. "
         "No hardware needed.",
+        epilog="exit codes: 0 as expected, 1 scenario failures, 2 usage/environment/policy, "
+        "3 execution error",
     )
     p.add_argument("--version", action="version", version=f"profileguard {__version__}")
     sub = p.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("doctor", help="check awk implementations and bundled files").set_defaults(
-        func=cmd_doctor
+    d = sub.add_parser("doctor", help="check awk implementations and bundled files")
+    d.add_argument(
+        "--require", action="append", metavar="AWK", help="fail unless this awk is installed"
     )
+    d.set_defaults(func=cmd_doctor)
 
     sc = sub.add_parser("scenarios", help="list scenarios")
     sc.add_argument("-v", "--verbose", action="store_true")
@@ -192,6 +241,13 @@ def build_parser() -> argparse.ArgumentParser:
     t.add_argument(
         "--strict", action="store_true", help="also exit 1 on findings against proposed invariants"
     )
+    t.add_argument(
+        "--expect-fail",
+        action="append",
+        metavar="ID",
+        help="exit 0 only if exactly these scenarios fail, on every awk "
+        "(repeatable or comma-separated)",
+    )
     t.add_argument("-v", "--verbose", action="store_true")
     t.set_defaults(func=cmd_test)
 
@@ -201,9 +257,9 @@ def build_parser() -> argparse.ArgumentParser:
     _add_target_args(c)
     c.set_defaults(func=cmd_compare)
 
-    r = sub.add_parser("report", help="render a JSON report as HTML")
+    r = sub.add_parser("report", help="validate a JSON report, optionally render it as HTML")
     r.add_argument("json_report")
-    r.add_argument("--html", required=True, metavar="FILE")
+    r.add_argument("--html", metavar="FILE")
     r.set_defaults(func=cmd_report)
     return p
 
