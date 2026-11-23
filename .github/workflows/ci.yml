@@ -27,7 +27,7 @@ jobs:
           - { os: ubuntu-24.04, python: "3.11" }
           - { os: ubuntu-24.04, python: "3.12" }
           - { os: ubuntu-24.04, python: "3.13" }
-          - { os: macos-14, python: "3.12" } # the system awk only (BWK awk)
+          - { os: macos-latest, python: "3.12" } # the system awk only (BWK awk); macos-14 was retired
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
