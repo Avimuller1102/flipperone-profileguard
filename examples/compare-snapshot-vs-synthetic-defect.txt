@@ -1,5 +1,5 @@
-baseline:  snapshot:dev@bb92d87 (upstream-snapshot)
-candidate: synthetic-defect (synthetic-fixture)
+baseline:  snapshot:dev@bb92d87 (upstream-snapshot, bundled)
+candidate: synthetic-defect (synthetic-fixture, bundled)
 
 change            id     awk           basis     baseline -> candidate
 regressed         AM-01  mawk          contract  PASS -> FAIL

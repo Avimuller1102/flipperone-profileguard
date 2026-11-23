@@ -25,7 +25,9 @@ Pages read: docs.flipper.net/one/how-to-join, /open-tasks, /testing/about, /dev-
 #10), /cpu-software/about, /cpu-software/build-system, /cpu-software/profiles,
 /cpu-software/supported-boards; issue flipperone-linux-build-scripts#140; PRs listed above.
 
-No upstream commit or PR was newer than 2026-11-20 at the time of research **[fact]**.
+No upstream commit or PR was newer than 2026-11-20 at the time of research **[fact]**. Re-checked
+later the same day with `git ls-remote`: `dev` and all six PR heads still at the SHAs above, no new
+PRs, and `tests/` on `dev` still contains only `entry-names.sh` **[fact]**.
 
 ## 2. Architecture of profiles (answers to research questions 1-3)
 
@@ -118,7 +120,8 @@ cannot produce, and it would observe drift without testing behaviour.
 
 - All nine contract scenarios pass on `dev@bb92d87` with mawk 1.3.4, gawk 5.2.1, BusyBox
   1.36.1 awk and one-true-awk 20231127, and all four give byte-identical output.
-- The empty-file case (AM-10) fails on `dev`, as PR #4 describes, and passes with PR #4.
+- The empty-file case (AM-10) fails on `dev` and passes with PR #4. **This bug was found and fixed
+  by rafaetri in PR #4**; this project only reproduces it.
 - **Finding, proposed invariant (AM-11).** If the owner deletes the factory `user` account, the next
   update brings back its *shadow* record with the new build's factory hash. This happens because
   every build re-salts that record (`flipper-accountdb.awk:23`). The passwd/group lines do not

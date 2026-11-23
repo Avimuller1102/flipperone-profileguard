@@ -4,10 +4,11 @@
     "name": "profileguard",
     "version": "0.1.0"
   },
-  "generated_at": "2026-11-23T13:28:51+00:00",
+  "generated_at": "2026-11-23T13:46:28+00:00",
   "target": {
     "label": "snapshot:dev@bb92d87",
     "mode": "upstream-snapshot",
+    "trust": "bundled",
     "upstream_code_executed": true,
     "script_path": "libs/flipper-accountdb.awk",
     "git_blob": "0533182f2d87de6d350dd45f22573122ace6e087",

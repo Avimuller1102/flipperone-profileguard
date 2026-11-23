@@ -4,21 +4,27 @@
 
 | Layer | Where | Runs upstream code | Hardware |
 |---|---|---|---|
-| Unit | `tests/unit/` | no (parsing, checks, git provenance, CLI exit codes) | none |
-| Integration | `tests/integration/` | yes: dev snapshot, PR #4, synthetic defect, proposed shell test | none |
+| Unit | `tests/unit/` | no: parsing, checks, trust gates, report validation, exit codes, process limits | none |
+| Integration | `tests/integration/` | yes: dev snapshot, PR #4 copy, synthetic defect, and the proposed shell test under every shell × awk installed | none |
 | Property | `tests/property/` | yes: Hypothesis generates account databases, the real script merges them | none |
 | Hardware | the matrix below | yes | RK3576 board, **not run** |
 
-`tests/integration/test_upstream_behaviour.py` pins what upstream does today (dev fails AM-10, AM-11
-and AM-13; PR #4 fails AM-11, AM-12 and AM-13) for every awk installed, and checks all awks agree byte for
-byte. If upstream changes, these tests fail on purpose and must be updated after a look at the
-change.
+`tests/integration/test_upstream_behaviour.py` pins what upstream does today, for every awk
+installed: dev fails AM-10, AM-11 and AM-13, and the PR #4 copy fails AM-11, AM-12 and AM-13. It
+also checks that all awks agree byte for byte. If upstream changes, these tests fail on purpose,
+and someone must look at the change before updating them.
 
-The properties restate `flipper-accountdb.awk:3-5`: a profile's change rides along, an untouched
-account follows the new base, a profile's deletion holds when the base did not change the
-record, a new-base addition appears, no key is duplicated. Two more: re-running the same update
-changes nothing, and group members are three-way set-merged. Generated files always contain a
-root entry, so the dev snapshot's empty-file bug is left to AM-10.
+The properties restate `flipper-accountdb.awk:3-5`:
+
+- a change made in the profile rides along;
+- an account nobody touched follows the new base;
+- a deletion in the profile holds when the base did not change the record;
+- an account the new base added appears;
+- no key appears twice.
+
+Two more properties: running the same update twice changes nothing, and group members are
+three-way set-merged. Generated files always contain a root entry, so the dev snapshot's
+empty-file bug is left to AM-10.
 
 ## Running
 
@@ -26,6 +32,20 @@ root entry, so the dev snapshot's empty-file bug is left to AM-10.
 python -m pytest -v
 python -m pytest tests/property -v --hypothesis-show-statistics
 ```
+
+## What has been verified where
+
+Verified means executed on 2026-11-23 in this project's development environment (Ubuntu 24.04
+x86_64 container), not in CI.
+
+| Environment | Status |
+|---|---|
+| Linux, Python 3.11.18 / 3.12.3 / 3.13.18: full pytest, mypy, `--expect-fail` run | verified |
+| awk: mawk 1.3.4, gawk 5.2.1, BusyBox 1.36.1 awk, one-true-awk 20231127 | verified, identical output |
+| Shell test: dash 0.5.12, bash 5.2, BusyBox 1.36.1 sh × the four awks, dev and PR #4 | verified: 24 distinct combinations (3 shells × 4 awks × 2 revisions) |
+| macOS (BSD userland, Apple's awk) | **not verified**. CI has a `macos-14` job; it has not run yet |
+| GitHub Actions workflow | **not verified**. actionlint 1.7.12 is clean, but the workflow has never run on GitHub |
+| Windows | not supported (needs a POSIX awk); WSL untested |
 
 ## Hardware validation matrix (specified, NOT RUN)
 
@@ -39,4 +59,4 @@ None of this has been executed by this project.
 | H-3 | Create `alice`, add to `sudo`, remove `user` from `sudo`; update | `alice` logs in and has sudo; `user` is not in `sudo` | NOT RUN |
 | H-4 | `userdel user` in A (after creating another admin); update A | Record whether `/etc/shadow` holds `user` again and what `migrate-profile` warned (AM-11) | NOT RUN |
 | H-5 | Never touch profile B; update B | B accepts `user`/`user` (documented current behaviour, #140 decision 4) | NOT RUN |
-| H-6 | Repeat H-1 while running `migrate-profile` by hand without `-a` | Dry run lists the shadow change and writes nothing | NOT RUN |
+| H-6 | Run `migrate-profile` by hand without `-a` (dry run by default, `migrate-profile:30`) | Dry run lists the shadow change and writes nothing | NOT RUN |

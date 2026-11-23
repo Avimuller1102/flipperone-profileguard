@@ -4,12 +4,13 @@
     "name": "profileguard",
     "version": "0.1.0"
   },
-  "generated_at": "2026-11-23T13:28:51+00:00",
+  "generated_at": "2026-11-23T13:46:28+00:00",
   "target": {
     "label": "synthetic-defect",
     "mode": "synthetic-fixture",
+    "trust": "bundled",
     "upstream_code_executed": false,
-    "script_path": "/home/user/flipperone-profileguard/src/profileguard/fixtures/synthetic-defect-accountdb.awk",
+    "script_path": "synthetic-defect-accountdb.awk",
     "git_blob": "83938f2c017999ef345e430e1b6c0145d5b649d6",
     "commit": null,
     "repository": null,

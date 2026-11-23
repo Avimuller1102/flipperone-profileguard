@@ -15,38 +15,51 @@ a time with
 [`libs/flipper-accountdb.awk`](https://github.com/flipperdevices/flipperos-btrfs-tools/blob/dev/libs/flipper-accountdb.awk).
 
 That merge decides whether a profile keeps the password its owner set or gets the factory one
-back. Because the image build runs `chpasswd` every time, the factory record differs between any
-two builds, so the merge has to tell "the build changed this" apart from "the owner changed this"
-on every update. The script has a short written contract in its header comment. On upstream `dev`
-it has no tests.
+back. The image build runs `chpasswd` every time, so the factory record differs between any two
+builds. The merge therefore has to tell "the build changed this" apart from "the owner changed
+this" on every update. The script's contract is a short header comment, and on upstream `dev` it
+has no tests.
 
 ## What it does
 
-- Runs the **real upstream script** on 13 synthetic scenarios (fake placeholder hashes only) and
-  checks each against an expectation that is either:
-  - **contract**: written down upstream, so a failure is a violation of what upstream says it does;
-  - **proposed**: a security property this project suggests and upstream has not decided, so a
-    failure is a *finding* to discuss, not a bug report.
-- Runs every scenario with each awk it finds (mawk, gawk `--sandbox`, BusyBox awk, one-true-awk)
-  and checks they agree.
-- Compares two upstream revisions and reports which scenarios were fixed, regressed or changed.
-- Writes JSON (schema in `docs/report-schema.json`) and a self-contained HTML report. Every result
-  records the commit and git blob it ran, and says whether upstream code was executed.
-- Includes a **synthetic defect**, a plausible one-line change to the script, to show that the
-  checks catch it.
-- Proposes the contract scenarios upstream as one POSIX shell test written in the repository's
-  own style (`upstream-proposal/`).
+- Runs the **real upstream script** on 13 synthetic scenarios (fake placeholder hashes only). Each
+  expectation is either:
+  - **contract**: written down upstream, so a failure means the script does not do what upstream says;
+  - **proposed**: a security property suggested here that upstream has not decided, so a failure
+    is a question for maintainers, not a bug report.
+- Runs every scenario with each awk it finds (mawk, gawk, BusyBox awk, one-true-awk) and checks
+  they agree.
+- Compares two upstream revisions and names each change: fixed, regressed or behaviour-change.
+- Writes JSON (schema in `src/profileguard/report-schema.json`) and a self-contained HTML report.
+  `profileguard report` validates a report. Every report records the commit, git blob and trust
+  level of what ran.
+- Includes a **synthetic defect** (a plausible one-line change, not upstream code) to show that
+  the checks catch a regression.
+- Proposes the contract scenarios upstream as one POSIX shell test written in the repository's own
+  style (`upstream-proposal/`).
 
 ## What it does not do
 
 - It does not run `migrate-profile` or `update-profile` themselves (they need btrfs and root),
   and it does not emulate a device.
-- It does not decide security policy for Flipper OS. Proposed invariants are questions.
+- It does not decide security policy for Flipper OS.
 - No result here comes from hardware. See [docs/LIMITATIONS.md](docs/LIMITATIONS.md).
+
+## What it found, and who found it
+
+| Kind | Scenario | Status |
+|---|---|---|
+| Upstream defect **already found and fixed by someone else** | AM-10: an empty base file shifts the roles of the other files | Fixed in the open [PR #4](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/4) by rafaetri. Reproduced here; not found by this project. |
+| Behaviour questions for maintainers | AM-11: an account the owner deleted gets its factory shadow record back on update · AM-12: with PR #4, if the base lacks the file, the factory record wins over the owner's · AM-13: an owner-set group password is dropped | Unconfirmed policy. Not presented as bugs. See [docs/RESEARCH.md §7](docs/RESEARCH.md#7-results-of-running-it-summary-full-output-in-examples). |
+| Synthetic defect | `synthetic-defect` | Written for this project to show detection; not upstream code. |
+
+No new upstream defect is confirmed.
 
 ## Install
 
-Python 3.11+ and at least one awk. Linux and macOS are supported; on Windows use WSL.
+Python 3.11+ and at least one awk. Verified on Linux with Python 3.11, 3.12 and 3.13. macOS is
+expected to work but has not been verified (see [docs/TESTING.md](docs/TESTING.md)). On Windows,
+use WSL.
 
 ```bash
 git clone https://github.com/avimuller1102/flipperone-profileguard
@@ -70,29 +83,37 @@ profileguard test --all-awks --html report.html
 profileguard compare --baseline snapshot --candidate synthetic-defect
 ```
 
-`--target snapshot` (the default) is an unmodified copy of upstream's script from
-`dev@bb92d87`, bundled so the tool works offline. `profileguard doctor` checks that its git blob
-id still matches upstream.
+`--target snapshot` (the default) is an unmodified copy of upstream's script from `dev@bb92d87`,
+bundled so the tool works offline. Its git blob id is checked before every run.
 
-To test a live checkout or an open pull request:
+## Trust levels
+
+| Trust | What | How it runs |
+|---|---|---|
+| `bundled` | the snapshot and the synthetic fixture, blob-checked | any awk |
+| `upstream-merged` | a commit on the default branch of a clone whose origin is `github.com/flipperdevices/flipperos-btrfs-tools` | any awk |
+| `unreviewed` | an unmerged PR, a fork, a local `.awk` file | refused without `--allow-unreviewed`; then only `gawk --sandbox`, unless `--allow-unsandboxed-awk` is also given |
 
 ```bash
 git clone https://github.com/flipperdevices/flipperos-btrfs-tools ../flipperos-btrfs-tools
 git -C ../flipperos-btrfs-tools fetch origin pull/4/head:pr4
-profileguard test --repo ../flipperos-btrfs-tools --target origin/dev
-profileguard compare --repo ../flipperos-btrfs-tools --baseline origin/dev --candidate pr4 --allow-unmerged
+profileguard test --repo ../flipperos-btrfs-tools --target origin/dev --all-awks
+git -C ../flipperos-btrfs-tools show pr4:libs/flipper-accountdb.awk   # read it first
+profileguard compare --repo ../flipperos-btrfs-tools --baseline origin/dev --candidate pr4 --allow-unreviewed --awk gawk
 ```
 
-A revision that is not on upstream's default branch is refused until you pass
-`--allow-unmerged`. Read the script before you pass it. gawk always runs with `--sandbox`.
+None of this is a sandbox. awk runs as you, with a timeout and resource limits; gawk's
+`--sandbox` blocks `system()`, pipes and redirections but not reading files you can read. See
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md#trust-boundaries).
 
-Exit codes: `0` every contract scenario passed · `1` a contract scenario failed or errored (with
-`--strict`, also a finding) · `2` usage or environment error.
+**Exit codes:** `0` as expected · `1` scenario failures (a contract scenario failed, failures
+differ from `--expect-fail`, or `compare` found a regression) · `2` usage, environment or policy
+problem · `3` awk execution error.
 
 ## Sample output
 
-Real output on this machine (`profileguard test --awk mawk`; all four awks in
-`examples/dev-snapshot-output.txt`):
+Real output from `profileguard test --awk mawk` on Linux. All four awks are in
+`examples/dev-snapshot-output.txt`.
 
 ```text
 target: snapshot:dev@bb92d87  mode: upstream-snapshot  upstream code executed: yes
@@ -125,20 +146,15 @@ FAIL*  AM-13  [mawk] [proposed] Group password the owner set survives an unchang
 13 checks: 10 passed, 3 failed (contract violations: 1, proposed-invariant findings: 2), 0 errors
 ```
 
-AM-10 is the bug that the open upstream
-[PR #4](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/4) by rafaetri already
-fixes. It was not found by this project. AM-11 and AM-13 are discussed in
-[docs/RESEARCH.md §7](docs/RESEARCH.md#7-results-of-running-it-summary-full-output-in-examples).
+CI pins exactly these failures with `profileguard test --expect-fail AM-10,AM-11,AM-13`. Any other
+failure, or one of these starting to pass, fails the build.
 
 ### The synthetic regression being caught
 
-`synthetic-defect` changes one line: when both the new build and the owner changed a record, the
-new build wins. That is **not** upstream code and **not** a known upstream bug.
-
 ```text
 $ profileguard compare --baseline snapshot --candidate synthetic-defect --awk mawk
-baseline:  snapshot:dev@bb92d87 (upstream-snapshot)
-candidate: synthetic-defect (synthetic-fixture)
+baseline:  snapshot:dev@bb92d87 (upstream-snapshot, bundled)
+candidate: synthetic-defect (synthetic-fixture, bundled)
 
 change            id     awk           basis     baseline -> candidate
 regressed         AM-01  mawk          contract  PASS -> FAIL
@@ -149,9 +165,9 @@ regressed         AM-04  mawk          contract  PASS -> FAIL
 regressed: 2, unchanged: 11
 ```
 
-Exit code 1. The owner's password and the owner's lock both turn back into the factory record.
-The Hypothesis property tests find the same defect on their own, without being pointed at it
-(`tests/integration/test_synthetic_regression.py`).
+The command exits with code 1. After the defect, both the owner's password and the owner's lock
+come back as the factory record. The Hypothesis property tests also find this defect without
+being told where it is.
 
 ## Tests
 
@@ -160,15 +176,14 @@ make check      # ruff, ruff format --check, mypy --strict, pytest
 make demo       # the offline demo above
 ```
 
-The suite has unit tests, integration tests that pin what the dev snapshot and PR #4 do today,
-cross-awk agreement checks, and Hypothesis properties that restate the script's header contract.
-See [docs/TESTING.md](docs/TESTING.md).
+See [docs/TESTING.md](docs/TESTING.md) for what each layer covers, what was verified where, and
+the hardware matrix nobody has run yet.
 
 ## Documentation
 
 - [docs/RESEARCH.md](docs/RESEARCH.md): upstream audit, commit SHAs, why this scope
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): modules and execution modes
-- [docs/TESTING.md](docs/TESTING.md): what is tested, and the hardware matrix nobody has run yet
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): modules, trust boundaries
+- [docs/TESTING.md](docs/TESTING.md)
 - [docs/LIMITATIONS.md](docs/LIMITATIONS.md)
 - [docs/UPSTREAM_CONTRIBUTION.md](docs/UPSTREAM_CONTRIBUTION.md): the proposed upstream change
 

@@ -20,54 +20,81 @@ used by `migrate-profile`/`update-profile`, and it has no test on `dev`.
 flipperone-testing holds on-device scripts (thermal, power) and is unrelated to this code. Nothing
 here replaces it.
 
-## 3. Smallest reviewable upstream PR (option C: a targeted test in the repo that owns the code)
+## 3. Smallest reviewable upstream PR (a targeted test in the repo that owns the code)
 
 **Repository:** flipperdevices/flipperos-btrfs-tools, base `dev`.
-**Change:** add one file, `tests/accountdb-merge.sh` (copy in `upstream-proposal/tests/`). It has no
-dependencies beyond `sh` and `awk`, follows the `ck` style of `tests/entry-names.sh`, and checks
-only the **contract** behaviour (11 checks, AM-01…AM-09). It changes no code. It works with or
-without PR #4, and it does not overlap with PR #4's `tests/accountdb.sh` (empty base).
 
-Verified here, every combination passing on `dev@bb92d87` and on PR #4 `@c8a97b0`:
-`dash`, `bash`, `busybox sh` × `mawk`, `gawk`, `original-awk`, BusyBox awk (24/24 runs, 11 checks
-each). `shellcheck -s sh` is clean. Against the synthetic defect it fails with exit 1 on two checks.
+**Change:** one new file, `tests/accountdb-merge.sh`, copied unchanged from
+`upstream-proposal/tests/`. It needs only `sh` and `awk`, follows the `ck` style of
+`tests/entry-names.sh`, changes no code, and has 12 checks. Each one tests behaviour that upstream
+has written down:
 
-Suggested PR title: `tests: what the account merge keeps when a profile moves onto a newer build`
+| Check | Upstream source |
+|---|---|
+| owner password kept over a rebuilt or the same factory record; locked account stays locked; account the owner added is carried | `flipper-accountdb.awk:4` "user-added or changed ones ride along from src" |
+| untouched root, never-set factory account, and new build's added account follow the new base | `:4` "untouched accounts follow the new base" |
+| no account twice | `:3` "entries cannot duplicate"; `migrate-profile:427-428` |
+| membership removals and additions, gshadow admins and members | `:5` "memberships are set-merged", `LF=3,4` for gshadow; three-way removal per `merge_members` |
 
-The proposed invariants (AM-11, AM-12, AM-13) are **not** in that PR. They go to the issue as questions.
+It does not cover the empty-base case (PR #4's own `tests/accountdb.sh` does), and it does not
+encode the unresolved AM-11, AM-12 or AM-13. It works on `dev` with or without PR #4.
+
+**Verified here** (Ubuntu 24.04, not in upstream CI, which does not exist): every combination
+passes on `dev@bb92d87` and on PR #4 `@c8a97b0`, namely dash 0.5.12, bash 5.2 and BusyBox 1.36.1
+sh × mawk 1.3.4, gawk 5.2.1, one-true-awk 20231127 and BusyBox awk (24 distinct combinations).
+`shellcheck -s sh` is clean. It fails (exit 1) on the synthetic defect, exits 1 with a message if
+`libs/flipper-accountdb.awk` is missing, and leaves nothing in `$TMPDIR`.
+
+**PR title:** `tests: what the account merge keeps when a profile moves onto a newer build`
+
+**PR description:**
+
+> Adds `tests/accountdb-merge.sh`, 12 checks of what `libs/flipper-accountdb.awk` promises in its
+> header, with the three files laid out the way `migrate-profile` passes them (old `_stock`, new
+> build, profile). The image runs `chpasswd` at build time, so the factory record differs between
+> any two builds. Most checks are about telling that apart from a password the owner set: the
+> owner's password and lock survive a rebuilt factory record, accounts added by either side are
+> kept, and membership removals hold.
+>
+> No code changes. Independent of #4, which has its own test for the empty-base case.
+>
+> Ran it with dash, bash and busybox sh, each with mawk, gawk, one-true-awk and busybox awk, on
+> `dev` (bb92d87) and on #4; all pass, and shellcheck is clean. Not run on a board, but nothing
+> here needs one. `AWK=gawk ./tests/accountdb-merge.sh` runs it with another awk.
+>
+> Part of flipperdevices/flipperone-linux-build-scripts#140.
 
 ## 4. Draft comment for issue #140
 
-Post it only after the repository is public and the PR above is open. Replace the links.
+Post it only after the PR above is open. Replace `<PR link>`.
 
-> The account merge that `update-profile` runs through `migrate-profile`
-> (`libs/flipper-accountdb.awk`) is where #140's credentials meet every update, and `dev` has no test
-> for it, so I wrote one: <PR link>. It is one shell file in the style of `tests/entry-names.sh`
-> with 11 checks of the behaviour the script's header promises: an owner password survives a
-> rebuilt factory record, a lock survives, removed sudo membership stays removed, and so on. It
-> passes on `dev` (bb92d87) and on #4 with dash/bash/busybox sh and mawk/gawk/busybox/one-true-awk.
+> `update-profile` runs the account merge in `libs/flipper-accountdb.awk` (via `migrate-profile`)
+> on every update. That is where #140's credentials meet each new build, and `dev` has no test
+> for it, so I proposed one in flipperos-btrfs-tools: <PR link>. It adds 12 checks of what the
+> script's header promises and passes on `dev` and on #4.
 >
-> Running more cases turned up three behaviours I'd like a decision on rather than "fix":
+> While testing more cases I hit three behaviours that look like decisions rather than bugs:
 >
 > 1. If the owner deletes the factory `user`, the next update brings back its **shadow** record
 >    with the new build's factory hash. `chpasswd` re-salts it in every build, so the record always
 >    looks changed by the base (`flipper-accountdb.awk:23`). passwd/group stay deleted and
->    `check_db_pair` warns, so it is an orphan record, not a login. Should a deletion in the
+>    `check_db_pair` warns, so this is an orphan record, not a login. Should a deletion in the
 >    profile win here?
-> 2. With #4, when the old `_stock` lacks a database file, an owner-changed record loses to the
->    new build's (`:27`). Before #4 the shifted roles happened to keep the owner's. Intended?
-> 3. For `group`/`gshadow`, every non-list field comes from the new base when both have the
+> 2. With #4 applied, when the old `_stock` lacks a database file, a record the owner changed
+>    loses to the new build's (`:27`). Before #4 the shifted roles happened to keep the owner's.
+>    This only happens when the `_stock` lacks the file. Is that intended?
+> 3. For `group`/`gshadow`, every non-list field comes from the new base when both sides have the
 >    record (`mergerec`), so a group password the owner set is dropped even if the build never
->    touched it. Intended?
+>    touched that record. Is that intended?
 >
-> All three reproduce with synthetic inputs only, no hardware: <repo link>
-> (`profileguard test --scenario AM-11 --scenario AM-12 --scenario AM-13`, AM-12 needs #4).
-> Nothing here was run on a board.
+> All three reproduce with synthetic data on an ordinary machine:
+> https://github.com/avimuller1102/flipperone-profileguard (`profileguard test --scenario AM-11
+> --scenario AM-13`; AM-12 needs #4). Nothing was run on a board.
 
 ## 5. Integration roadmap (no new framework upstream)
 
 1. The shell test above, if maintainers want it.
-2. If they decide on AM-11/AM-12, a check for the chosen behaviour in the same file, together with
+2. If they decide on AM-11/AM-12/AM-13, a check for the chosen behaviour in the same file, together with
    whoever implements it.
 3. If flipperos-btrfs-tools gains CI, the test runs there like `entry-names.sh`.
 4. This repository stays a place for the broader exploration (properties, cross-awk, revision
