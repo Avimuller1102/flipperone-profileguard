@@ -13,3 +13,6 @@ report.json
 report.html
 # Private notes and message drafts, never published
 drafts/
+synthetic.txt
+pytest-results.xml
+drift.txt
