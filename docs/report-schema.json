@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "profileguard-report/1",
+  "title": "profileguard report",
+  "type": "object",
+  "required": ["schema", "tool", "generated_at", "target", "environment", "summary", "results", "limitations"],
+  "properties": {
+    "schema": { "const": "profileguard-report/1" },
+    "tool": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": { "name": { "type": "string" }, "version": { "type": "string" } }
+    },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "target": {
+      "type": "object",
+      "required": ["label", "mode", "upstream_code_executed", "script_path", "git_blob", "commit", "repository", "on_default_branch"],
+      "properties": {
+        "mode": { "enum": ["upstream-git", "upstream-snapshot", "synthetic-fixture", "external-file"] },
+        "upstream_code_executed": { "type": "boolean" },
+        "git_blob": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "commit": { "type": ["string", "null"] },
+        "repository": { "type": ["string", "null"] },
+        "on_default_branch": { "type": ["boolean", "null"] }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "required": ["python", "platform", "awk"],
+      "properties": {
+        "awk": {
+          "type": "array",
+          "items": { "type": "object", "required": ["name", "version", "sandboxed"] }
+        }
+      }
+    },
+    "summary": {
+      "type": "object",
+      "required": ["total", "PASS", "FAIL", "ERROR", "contract_violations", "findings"]
+    },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["scenario_id", "title", "database", "basis", "basis_source", "story", "awk", "status", "classification", "expected", "observed", "error", "inputs", "merged_output", "reproduce", "refs"],
+        "properties": {
+          "database": { "enum": ["passwd", "shadow", "group", "gshadow"] },
+          "basis": { "enum": ["contract", "proposed"] },
+          "status": { "enum": ["PASS", "FAIL", "ERROR"] },
+          "classification": { "enum": ["ok", "contract-violation", "finding", "execution-error"] },
+          "inputs": { "type": "object", "required": ["base", "new_base", "profile"] }
+        }
+      }
+    },
+    "limitations": { "type": "array", "items": { "type": "string" } }
+  }
+}

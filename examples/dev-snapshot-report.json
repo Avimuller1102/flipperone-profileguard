@@ -1,0 +1,2108 @@
+{
+  "schema": "profileguard-report/1",
+  "tool": {
+    "name": "profileguard",
+    "version": "0.1.0"
+  },
+  "generated_at": "2026-11-23T13:28:51+00:00",
+  "target": {
+    "label": "snapshot:dev@bb92d87",
+    "mode": "upstream-snapshot",
+    "upstream_code_executed": true,
+    "script_path": "libs/flipper-accountdb.awk",
+    "git_blob": "0533182f2d87de6d350dd45f22573122ace6e087",
+    "commit": "bb92d87252807ee306c90e9c853b8a9af84a493f",
+    "repository": "https://github.com/flipperdevices/flipperos-btrfs-tools",
+    "on_default_branch": true
+  },
+  "environment": {
+    "python": "3.13.18",
+    "platform": "Linux-6.18.44-fc-v726-x86_64-with-glibc2.39",
+    "awk": [
+      {
+        "name": "mawk",
+        "version": "mawk 1.3.4 20240123",
+        "sandboxed": false
+      },
+      {
+        "name": "gawk",
+        "version": "GNU Awk 5.2.1, API 3.2, PMA Avon 8-g1, (GNU MPFR 4.2.1, GNU MP 6.3.0)",
+        "sandboxed": true
+      },
+      {
+        "name": "busybox",
+        "version": "BusyBox v1.36.1 (Ubuntu 1:1.36.1-6ubuntu3.1) multi-call binary.",
+        "sandboxed": false
+      },
+      {
+        "name": "original-awk",
+        "version": "awk version 20231127",
+        "sandboxed": false
+      }
+    ]
+  },
+  "summary": {
+    "total": 52,
+    "PASS": 40,
+    "FAIL": 12,
+    "ERROR": 0,
+    "contract_violations": 4,
+    "findings": 8
+  },
+  "results": [
+    {
+      "scenario_id": "AM-01",
+      "title": "Owner password survives a rebuilt base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added or changed ones ride along from src'",
+      "story": "The owner changed the factory password; the new build re-salted the factory hash. update-profile must keep the owner's password, not hand back the factory one.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "'root' is exactly: root:*:20350:0:99999:7::: (untouched entry follows the new base)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-01",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-01",
+      "title": "Owner password survives a rebuilt base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added or changed ones ride along from src'",
+      "story": "The owner changed the factory password; the new build re-salted the factory hash. update-profile must keep the owner's password, not hand back the factory one.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "'root' is exactly: root:*:20350:0:99999:7::: (untouched entry follows the new base)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-01",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-01",
+      "title": "Owner password survives a rebuilt base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added or changed ones ride along from src'",
+      "story": "The owner changed the factory password; the new build re-salted the factory hash. update-profile must keep the owner's password, not hand back the factory one.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "'root' is exactly: root:*:20350:0:99999:7::: (untouched entry follows the new base)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-01",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-01",
+      "title": "Owner password survives a rebuilt base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added or changed ones ride along from src'",
+      "story": "The owner changed the factory password; the new build re-salted the factory hash. update-profile must keep the owner's password, not hand back the factory one.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "'root' is exactly: root:*:20350:0:99999:7::: (untouched entry follows the new base)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-01",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-02",
+      "title": "Owner password survives an unchanged base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5",
+      "story": "Same as AM-01 but the new base carries the very same factory record.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-02",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-02",
+      "title": "Owner password survives an unchanged base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5",
+      "story": "Same as AM-01 but the new base carries the very same factory record.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-02",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-02",
+      "title": "Owner password survives an unchanged base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5",
+      "story": "Same as AM-01 but the new base carries the very same factory record.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-02",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-02",
+      "title": "Owner password survives an unchanged base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5",
+      "story": "Same as AM-01 but the new base carries the very same factory record.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-02",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-03",
+      "title": "Never-customized account follows the new base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "A profile nobody onboarded keeps the factory record, so it takes the new build's factory record. This is the documented behaviour; whether a never-onboarded profile may keep factory credentials at all is decision 4 of issue #140, still open.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-03",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-03",
+      "title": "Never-customized account follows the new base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "A profile nobody onboarded keeps the factory record, so it takes the new build's factory record. This is the documented behaviour; whether a never-onboarded profile may keep factory credentials at all is decision 4 of issue #140, still open.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-03",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-03",
+      "title": "Never-customized account follows the new base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "A profile nobody onboarded keeps the factory record, so it takes the new build's factory record. This is the documented behaviour; whether a never-onboarded profile may keep factory credentials at all is decision 4 of issue #140, still open.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-03",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-03",
+      "title": "Never-customized account follows the new base",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "A profile nobody onboarded keeps the factory record, so it takes the new build's factory record. This is the documented behaviour; whether a never-onboarded profile may keep factory credentials at all is decision 4 of issue #140, still open.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-03",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-04",
+      "title": "Locked account stays locked",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: locking is a change made in src",
+      "story": "The owner ran `passwd -l user`. The lock must survive a rebuilt base.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7::: (still locked)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-04",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-04",
+      "title": "Locked account stays locked",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: locking is a change made in src",
+      "story": "The owner ran `passwd -l user`. The lock must survive a rebuilt base.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7::: (still locked)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-04",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-04",
+      "title": "Locked account stays locked",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: locking is a change made in src",
+      "story": "The owner ran `passwd -l user`. The lock must survive a rebuilt base.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7::: (still locked)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-04",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-04",
+      "title": "Locked account stays locked",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: locking is a change made in src",
+      "story": "The owner ran `passwd -l user`. The lock must survive a rebuilt base.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7::: (still locked)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:!$y$FAKE-SALT-BUILD-1$factory-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-04",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-05",
+      "title": "Owner-created account is carried",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added ... ride along from src'",
+      "story": "The owner added an account 'alice'. It must exist after the update.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'alice' is exactly: alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::",
+          "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-05",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-05",
+      "title": "Owner-created account is carried",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added ... ride along from src'",
+      "story": "The owner added an account 'alice'. It must exist after the update.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'alice' is exactly: alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::",
+          "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-05",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-05",
+      "title": "Owner-created account is carried",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added ... ride along from src'",
+      "story": "The owner added an account 'alice'. It must exist after the update.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'alice' is exactly: alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::",
+          "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-05",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-05",
+      "title": "Owner-created account is carried",
+      "database": "shadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'user-added ... ride along from src'",
+      "story": "The owner added an account 'alice'. It must exist after the update.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'alice' is exactly: alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::",
+          "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::",
+        "alice:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-05",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-06",
+      "title": "System account added by the new build appears",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "The new build adds a service account the profile never had.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'flipctl' is exactly: flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash",
+          "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:0:root:/root:/bin/bash",
+        "user:x:1000:1000::/home/user:/bin/bash",
+        "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-06",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-06",
+      "title": "System account added by the new build appears",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "The new build adds a service account the profile never had.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'flipctl' is exactly: flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash",
+          "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:0:root:/root:/bin/bash",
+        "user:x:1000:1000::/home/user:/bin/bash",
+        "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-06",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-06",
+      "title": "System account added by the new build appears",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "The new build adds a service account the profile never had.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'flipctl' is exactly: flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash",
+          "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:0:root:/root:/bin/bash",
+        "user:x:1000:1000::/home/user:/bin/bash",
+        "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-06",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-06",
+      "title": "System account added by the new build appears",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'untouched accounts follow the new base'",
+      "story": "The new build adds a service account the profile never had.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'flipctl' is exactly: flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash",
+          "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:0:root:/root:/bin/bash",
+        "user:x:1000:1000::/home/user:/bin/bash",
+        "flipctl:x:999:999::/var/lib/flipctl:/usr/sbin/nologin"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-06",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-07",
+      "title": "Membership the owner removed stays removed",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged' (3-way: a removal on either side holds)",
+      "story": "The owner took 'user' out of the sudo group as hardening. The update must not quietly give it back.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'sudo' field 4 members are {(none)} (removal kept)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "profile": [
+          "root:x:0:",
+          "sudo:x:27:"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "sudo:x:27:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-07",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-07",
+      "title": "Membership the owner removed stays removed",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged' (3-way: a removal on either side holds)",
+      "story": "The owner took 'user' out of the sudo group as hardening. The update must not quietly give it back.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'sudo' field 4 members are {(none)} (removal kept)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "profile": [
+          "root:x:0:",
+          "sudo:x:27:"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "sudo:x:27:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-07",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-07",
+      "title": "Membership the owner removed stays removed",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged' (3-way: a removal on either side holds)",
+      "story": "The owner took 'user' out of the sudo group as hardening. The update must not quietly give it back.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'sudo' field 4 members are {(none)} (removal kept)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "profile": [
+          "root:x:0:",
+          "sudo:x:27:"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "sudo:x:27:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-07",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-07",
+      "title": "Membership the owner removed stays removed",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged' (3-way: a removal on either side holds)",
+      "story": "The owner took 'user' out of the sudo group as hardening. The update must not quietly give it back.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'sudo' field 4 members are {(none)} (removal kept)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "sudo:x:27:user"
+        ],
+        "profile": [
+          "root:x:0:",
+          "sudo:x:27:"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "sudo:x:27:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-07",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-08",
+      "title": "Memberships added on both sides are united",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged'",
+      "story": "The owner added 'alice' to video; the new build added 'flipctl'. Both stay.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'video' field 4 members are {alice,flipctl,user}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "video:x:44:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "video:x:44:user,flipctl"
+        ],
+        "profile": [
+          "root:x:0:",
+          "video:x:44:user,alice"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "video:x:44:user,flipctl,alice"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-08",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-08",
+      "title": "Memberships added on both sides are united",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged'",
+      "story": "The owner added 'alice' to video; the new build added 'flipctl'. Both stay.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'video' field 4 members are {alice,flipctl,user}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "video:x:44:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "video:x:44:user,flipctl"
+        ],
+        "profile": [
+          "root:x:0:",
+          "video:x:44:user,alice"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "video:x:44:user,flipctl,alice"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-08",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-08",
+      "title": "Memberships added on both sides are united",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged'",
+      "story": "The owner added 'alice' to video; the new build added 'flipctl'. Both stay.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'video' field 4 members are {alice,flipctl,user}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "video:x:44:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "video:x:44:user,flipctl"
+        ],
+        "profile": [
+          "root:x:0:",
+          "video:x:44:user,alice"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "video:x:44:user,flipctl,alice"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-08",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-08",
+      "title": "Memberships added on both sides are united",
+      "database": "group",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'memberships are set-merged'",
+      "story": "The owner added 'alice' to video; the new build added 'flipctl'. Both stay.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'video' field 4 members are {alice,flipctl,user}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:x:0:",
+          "video:x:44:user"
+        ],
+        "new_base": [
+          "root:x:0:",
+          "video:x:44:user,flipctl"
+        ],
+        "profile": [
+          "root:x:0:",
+          "video:x:44:user,alice"
+        ]
+      },
+      "merged_output": [
+        "root:x:0:",
+        "video:x:44:user,flipctl,alice"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-08",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-09",
+      "title": "gshadow administrators and members are both set-merged",
+      "database": "gshadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'LF = ... gshadow=3,4'",
+      "story": "The owner made 'alice' a group admin and dropped 'user' as a member of netdev.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'netdev' field 3 members are {alice}",
+        "'netdev' field 4 members are {(none)}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "netdev:!:alice:"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "netdev:!:alice:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-09",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-09",
+      "title": "gshadow administrators and members are both set-merged",
+      "database": "gshadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'LF = ... gshadow=3,4'",
+      "story": "The owner made 'alice' a group admin and dropped 'user' as a member of netdev.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'netdev' field 3 members are {alice}",
+        "'netdev' field 4 members are {(none)}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "netdev:!:alice:"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "netdev:!:alice:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-09",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-09",
+      "title": "gshadow administrators and members are both set-merged",
+      "database": "gshadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'LF = ... gshadow=3,4'",
+      "story": "The owner made 'alice' a group admin and dropped 'user' as a member of netdev.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'netdev' field 3 members are {alice}",
+        "'netdev' field 4 members are {(none)}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "netdev:!:alice:"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "netdev:!:alice:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-09",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-09",
+      "title": "gshadow administrators and members are both set-merged",
+      "database": "gshadow",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:3-5: 'LF = ... gshadow=3,4'",
+      "story": "The owner made 'alice' a group admin and dropped 'user' as a member of netdev.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'netdev' field 3 members are {alice}",
+        "'netdev' field 4 members are {(none)}",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "netdev:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "netdev:!:alice:"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "netdev:!:alice:"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-09",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-10",
+      "title": "Empty base file keeps the other files in their roles",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:2 (positional roles); migrate-profile:401 passes an empty file when the base lacks the database; behaviour fixed in flipperos-btrfs-tools PR #4",
+      "story": "With an empty base, an account identical in the new base and the profile must survive. If awk counts files by their first line, an empty file shifts every role.",
+      "awk": "mawk",
+      "status": "FAIL",
+      "classification": "contract-violation",
+      "expected": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)",
+        "a 'root' entry exists and no key appears twice -> observed: no root entry"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-10",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-10",
+      "title": "Empty base file keeps the other files in their roles",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:2 (positional roles); migrate-profile:401 passes an empty file when the base lacks the database; behaviour fixed in flipperos-btrfs-tools PR #4",
+      "story": "With an empty base, an account identical in the new base and the profile must survive. If awk counts files by their first line, an empty file shifts every role.",
+      "awk": "gawk",
+      "status": "FAIL",
+      "classification": "contract-violation",
+      "expected": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)",
+        "a 'root' entry exists and no key appears twice -> observed: no root entry"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-10",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-10",
+      "title": "Empty base file keeps the other files in their roles",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:2 (positional roles); migrate-profile:401 passes an empty file when the base lacks the database; behaviour fixed in flipperos-btrfs-tools PR #4",
+      "story": "With an empty base, an account identical in the new base and the profile must survive. If awk counts files by their first line, an empty file shifts every role.",
+      "awk": "busybox",
+      "status": "FAIL",
+      "classification": "contract-violation",
+      "expected": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)",
+        "a 'root' entry exists and no key appears twice -> observed: no root entry"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-10",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-10",
+      "title": "Empty base file keeps the other files in their roles",
+      "database": "passwd",
+      "basis": "contract",
+      "basis_source": "libs/flipper-accountdb.awk:2 (positional roles); migrate-profile:401 passes an empty file when the base lacks the database; behaviour fixed in flipperos-btrfs-tools PR #4",
+      "story": "With an empty base, an account identical in the new base and the profile must survive. If awk counts files by their first line, an empty file shifts every role.",
+      "awk": "original-awk",
+      "status": "FAIL",
+      "classification": "contract-violation",
+      "expected": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is exactly: user:x:1000:1000::/home/user:/bin/bash -> observed: 'user' is: (absent)",
+        "a 'root' entry exists and no key appears twice -> observed: no root entry"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ],
+        "profile": [
+          "root:x:0:0:root:/root:/bin/bash",
+          "user:x:1000:1000::/home/user:/bin/bash"
+        ]
+      },
+      "merged_output": [],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-10",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-11",
+      "title": "Account the owner deleted is not revived by a rebuilt base",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:23 returns the new base's record when the base changed it",
+      "story": "The owner deleted the factory 'user' account. Because every build re-salts the factory hash, the new base's record differs from the old base's and the merge brings the factory shadow record back. passwd/group lines for 'user' do not change between builds, so they stay deleted and migrate-profile's check_db_pair warns about the orphan.",
+      "awk": "mawk",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'user' is absent (owner deleted it)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-11",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-11",
+      "title": "Account the owner deleted is not revived by a rebuilt base",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:23 returns the new base's record when the base changed it",
+      "story": "The owner deleted the factory 'user' account. Because every build re-salts the factory hash, the new base's record differs from the old base's and the merge brings the factory shadow record back. passwd/group lines for 'user' do not change between builds, so they stay deleted and migrate-profile's check_db_pair warns about the orphan.",
+      "awk": "gawk",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'user' is absent (owner deleted it)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-11",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-11",
+      "title": "Account the owner deleted is not revived by a rebuilt base",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:23 returns the new base's record when the base changed it",
+      "story": "The owner deleted the factory 'user' account. Because every build re-salts the factory hash, the new base's record differs from the old base's and the merge brings the factory shadow record back. passwd/group lines for 'user' do not change between builds, so they stay deleted and migrate-profile's check_db_pair warns about the orphan.",
+      "awk": "busybox",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'user' is absent (owner deleted it)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-11",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-11",
+      "title": "Account the owner deleted is not revived by a rebuilt base",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:23 returns the new base's record when the base changed it",
+      "story": "The owner deleted the factory 'user' account. Because every build re-salts the factory hash, the new base's record differs from the old base's and the merge brings the factory shadow record back. passwd/group lines for 'user' do not change between builds, so they stay deleted and migrate-profile's check_db_pair warns about the orphan.",
+      "awk": "original-awk",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'user' is absent (owner deleted it)",
+        "a 'root' entry exists and no key appears twice"
+      ],
+      "observed": [
+        "'user' is absent (owner deleted it) -> observed: 'user' is present: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-1$factory-placeholder:20300:0:99999:7:::"
+        ],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20350:0:99999:7:::",
+        "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-11",
+      "refs": [
+        "flipperone-linux-build-scripts#140"
+      ]
+    },
+    {
+      "scenario_id": "AM-12",
+      "title": "Owner password survives when the base lacks the database",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:27 'if (!ib) return Ol[k]' - with no base record the new base wins",
+      "story": "With no base record to compare against, the merge cannot tell who changed what. Siding with the new base means a factory credential replaces the owner's. Only reachable when the old _stock lacks the file (migrate-profile:401, :220 requires the _stock itself), so this is an edge case.",
+      "awk": "mawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-12",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-12",
+      "title": "Owner password survives when the base lacks the database",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:27 'if (!ib) return Ol[k]' - with no base record the new base wins",
+      "story": "With no base record to compare against, the merge cannot tell who changed what. Siding with the new base means a factory credential replaces the owner's. Only reachable when the old _stock lacks the file (migrate-profile:401, :220 requires the _stock itself), so this is an edge case.",
+      "awk": "gawk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-12",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-12",
+      "title": "Owner password survives when the base lacks the database",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:27 'if (!ib) return Ol[k]' - with no base record the new base wins",
+      "story": "With no base record to compare against, the merge cannot tell who changed what. Siding with the new base means a factory credential replaces the owner's. Only reachable when the old _stock lacks the file (migrate-profile:401, :220 requires the _stock itself), so this is an edge case.",
+      "awk": "busybox",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-12",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-12",
+      "title": "Owner password survives when the base lacks the database",
+      "database": "shadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:27 'if (!ib) return Ol[k]' - with no base record the new base wins",
+      "story": "With no base record to compare against, the merge cannot tell who changed what. Siding with the new base means a factory credential replaces the owner's. Only reachable when the old _stock lacks the file (migrate-profile:401, :220 requires the _stock itself), so this is an edge case.",
+      "awk": "original-awk",
+      "status": "PASS",
+      "classification": "ok",
+      "expected": [
+        "'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential)"
+      ],
+      "observed": [
+        "all expectations met"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [],
+        "new_base": [
+          "root:*:20350:0:99999:7:::",
+          "user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::"
+        ],
+        "profile": [
+          "root:*:20300:0:99999:7:::",
+          "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+        ]
+      },
+      "merged_output": [
+        "root:*:20300:0:99999:7:::",
+        "user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7:::"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-12",
+      "refs": [
+        "flipperos-btrfs-tools#4"
+      ]
+    },
+    {
+      "scenario_id": "AM-13",
+      "title": "Group password the owner set survives an unchanged base",
+      "database": "gshadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:3-5 says changed records ride along, but mergerec (libs/flipper-accountdb.awk:32-38) takes every non-list field from the new base",
+      "story": "The owner set a group password on 'wheel' in gshadow; the new build did not touch that record. For group databases the merge keeps member lists from both sides but takes the other fields from the new base, so the owner's change is dropped.",
+      "awk": "mawk",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+      ],
+      "observed": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "wheel:!::user"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk mawk --scenario AM-13",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-13",
+      "title": "Group password the owner set survives an unchanged base",
+      "database": "gshadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:3-5 says changed records ride along, but mergerec (libs/flipper-accountdb.awk:32-38) takes every non-list field from the new base",
+      "story": "The owner set a group password on 'wheel' in gshadow; the new build did not touch that record. For group databases the merge keeps member lists from both sides but takes the other fields from the new base, so the owner's change is dropped.",
+      "awk": "gawk",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+      ],
+      "observed": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "wheel:!::user"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk gawk --scenario AM-13",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-13",
+      "title": "Group password the owner set survives an unchanged base",
+      "database": "gshadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:3-5 says changed records ride along, but mergerec (libs/flipper-accountdb.awk:32-38) takes every non-list field from the new base",
+      "story": "The owner set a group password on 'wheel' in gshadow; the new build did not touch that record. For group databases the merge keeps member lists from both sides but takes the other fields from the new base, so the owner's change is dropped.",
+      "awk": "busybox",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+      ],
+      "observed": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "wheel:!::user"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk busybox --scenario AM-13",
+      "refs": []
+    },
+    {
+      "scenario_id": "AM-13",
+      "title": "Group password the owner set survives an unchanged base",
+      "database": "gshadow",
+      "basis": "proposed",
+      "basis_source": "libs/flipper-accountdb.awk:3-5 says changed records ride along, but mergerec (libs/flipper-accountdb.awk:32-38) takes every non-list field from the new base",
+      "story": "The owner set a group password on 'wheel' in gshadow; the new build did not touch that record. For group databases the merge keeps member lists from both sides but takes the other fields from the new base, so the owner's change is dropped.",
+      "awk": "original-awk",
+      "status": "FAIL",
+      "classification": "finding",
+      "expected": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+      ],
+      "observed": [
+        "'wheel' is exactly: wheel:$y$FAKE-SALT-GROUP$group-placeholder::user -> observed: 'wheel' is: wheel:!::user"
+      ],
+      "error": null,
+      "inputs": {
+        "base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "new_base": [
+          "root:*::",
+          "wheel:!::user"
+        ],
+        "profile": [
+          "root:*::",
+          "wheel:$y$FAKE-SALT-GROUP$group-placeholder::user"
+        ]
+      },
+      "merged_output": [
+        "root:*::",
+        "wheel:!::user"
+      ],
+      "reproduce": "profileguard test --target snapshot --awk original-awk --scenario AM-13",
+      "refs": []
+    }
+  ],
+  "limitations": [
+    "Only libs/flipper-accountdb.awk is executed. migrate-profile's surrounding steps (btrfs send, finalize_accountdbs, check_db_pair, rsync) are not run.",
+    "Inputs are synthetic account databases with placeholder hashes, not files from a device.",
+    "No result here was obtained on Flipper One or RK3576 hardware.",
+    "Passing every scenario does not make a revision secure; it means these scenarios hold."
+  ]
+}

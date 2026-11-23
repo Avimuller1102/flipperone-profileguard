@@ -1,0 +1,18 @@
+baseline:  origin/dev@bb92d87 (upstream-git)
+candidate: pr4@c8a97b0 (upstream-git)
+
+change            id     awk           basis     baseline -> candidate
+fixed             AM-10  mawk          contract  FAIL -> PASS
+fixed             AM-10  gawk          contract  FAIL -> PASS
+fixed             AM-10  busybox       contract  FAIL -> PASS
+fixed             AM-10  original-awk  contract  FAIL -> PASS
+behaviour-change  AM-12  mawk          proposed  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+behaviour-change  AM-12  gawk          proposed  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+behaviour-change  AM-12  busybox       proposed  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+behaviour-change  AM-12  original-awk  proposed  PASS -> FAIL
+                  candidate: 'user' is exactly: user:$y$FAKE-SALT-OWNER$owner-placeholder:20310:0:99999:7::: (owner's credential) -> observed: 'user' is: user:$y$FAKE-SALT-BUILD-2$factory-placeholder:20350:0:99999:7:::
+
+behaviour-change: 4, fixed: 4, unchanged: 44
