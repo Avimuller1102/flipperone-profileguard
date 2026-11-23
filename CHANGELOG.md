@@ -2,6 +2,8 @@
 
 ## 0.1.1 (2026-11-23)
 
+- The proposed shell test was merged upstream as `tests/accountdb-merge.sh` (`8cc73fe`).
+
 - Bundled snapshot moved to upstream `dev@8c9ffc7`, which fixes AM-11 and AM-13 (Yury-MonZon)
   and includes #4 (rafaetri, AM-10). All 13 scenarios pass on it.
 - AM-11, AM-12 and AM-13 are now `contract`: upstream documented the behaviour.

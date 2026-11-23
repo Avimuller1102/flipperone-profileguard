@@ -57,8 +57,9 @@ started, upstream had no tests for it.
 
 The fixes are upstream's work. This project's part was writing the scenarios that surfaced
 AM-11 to AM-13 and proposing the contract checks as
-[flipperos-btrfs-tools#5](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/5), which
-still passes after `8c9ffc7`. Upstream added its own regression tests for all three cases in
+[flipperos-btrfs-tools#5](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/5). The
+maintainer ran it on a Flipper One and merged it into `dev` as
+[`8cc73fe`](https://github.com/flipperdevices/flipperos-btrfs-tools/commit/8cc73fe) (`tests/accountdb-merge.sh`). Upstream added its own regression tests for all three cases in
 `tests/accountdb.sh`.
 
 The bundled snapshot is now `dev@8c9ffc7`, and it passes all 13 scenarios. The pre-fix revision

@@ -4,7 +4,7 @@
 
 | | |
 |---|---|
-| Shell test | [flipperdevices/flipperos-btrfs-tools#5](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/5), open, awaiting review; passes on `dev@8c9ffc7` |
+| Shell test | [flipperdevices/flipperos-btrfs-tools#5](https://github.com/flipperdevices/flipperos-btrfs-tools/pull/5), **merged** into `dev` as `8cc73fe` after the maintainer ran it on a Flipper One |
 | Questions on #140 | posted; answered by Yury-MonZon the same day |
 | AM-11, AM-13 | fixed upstream in `8c9ffc7` (Yury-MonZon), with tests in upstream `tests/accountdb.sh` |
 | AM-12 | not reachable on a device (every stock carries all eight account files); `8c9ffc7` makes the profile win on that path |
