@@ -1,0 +1,83 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 5 * * 1" # weekly: has upstream dev moved?
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04, python: "3.11" }
+          - { os: ubuntu-24.04, python: "3.13" }
+          - { os: macos-14, python: "3.12" } # BSD/one-true-awk only
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Install awk implementations
+        if: runner.os == 'Linux'
+        run: sudo apt-get update -q && sudo apt-get install -y -q mawk gawk busybox original-awk
+      - run: python -m pip install -e ".[dev]"
+      - run: ruff check .
+      - run: ruff format --check .
+      - run: mypy
+      - run: python -m pytest -v
+      - run: profileguard doctor
+      - name: Synthetic regression must be detected (exit 1 expected)
+        run: |
+          set +e
+          profileguard compare --baseline snapshot --candidate synthetic-defect --all-awks
+          rc=$?
+          test "$rc" -eq 1
+      - name: Report on the bundled upstream snapshot
+        run: profileguard test --all-awks --json report.json --html report.html || test $? -eq 1
+      - uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf882 # v4.4.3
+        with:
+          name: report-${{ matrix.os }}-py${{ matrix.python }}
+          path: report.*
+
+  package:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+      - name: Build a wheel and run it from a clean virtualenv
+        run: |
+          python -m pip install build
+          python -m build --wheel
+          python -m venv /tmp/clean
+          /tmp/clean/bin/pip install dist/*.whl
+          cd /tmp && /tmp/clean/bin/profileguard doctor && /tmp/clean/bin/profileguard scenarios
+
+  upstream-drift:
+    # Runs the scenarios on today's upstream dev and fails only if it does worse than the
+    # bundled snapshot. No unmerged code runs here.
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: "3.12"
+      - run: sudo apt-get update -q && sudo apt-get install -y -q mawk gawk busybox original-awk
+      - run: python -m pip install .
+      - run: git clone --quiet https://github.com/flipperdevices/flipperos-btrfs-tools upstream
+      - run: profileguard compare --repo upstream --baseline snapshot --candidate origin/dev --all-awks
